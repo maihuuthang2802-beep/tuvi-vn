@@ -13,7 +13,7 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - API routes prepared for AI reading, auth, checkout, and history.
 - Tử Vi engine is ported from `D:\tuvi\ziwei-doushu` and exposed through `/api/reading`.
 - Kinh Dịch engine is a custom 64-guai + moving line system based on the King Wen classic.
-- Xin Xăm and Tarot remain MVP/rule-based until expanded.
+- Xin Xăm (lots) and Tarot (major arcana) have dedicated UI pages with interactive graphics.
 
 ## Stack
 - Next.js 16 App Router
@@ -23,7 +23,11 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Vercel target
 
 ## Main files
-- `src/app/page.tsx`: main UI, service selector, form, pricing, result panel.
+- `src/app/page.tsx`: landing page with 4 service cards (Tử Vi, Kinh Dịch, Xin Xăm, Tarot).
+- `src/app/tu-vi/page.tsx`: Tử Vi page — 3-column layout: left sidebar (form + palace list), center (4×4 chart grid), right sidebar (star details + interpretation).
+- `src/app/kinh-dich/page.tsx`: Kinh Dịch page — 3-tab switcher: Lục Hào (coin casting animation), Thiên Ý (intent-based), Mai Hoa (time-based). Hexagram rendering with line-by-line display.
+- `src/app/xin-xam/page.tsx`: Xin Xăm page — bamboo tube shake animation, random lot draw, expandable poem + 4-category interpretation (tài lộc, tình duyên, gia đạo, sức khỏe).
+- `src/app/tarot/page.tsx`: Tarot page — 1 or 3 card spread, 3D flip animation, upright/reversed meanings.
 - `src/lib/readings.ts`: reading orchestrator; Tử Vi/Kinh Dịch use real engines; Xin Xăm/Tarot use MVP rules.
 - `src/lib/ziwei/algorithm.ts`: real Tử Vi chart generation via `iztro`.
 - `src/lib/ziwei/cities.ts`: Vietnam provinces/cities and longitude data for true solar time.
@@ -51,17 +55,23 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Location data must be Vietnam-only; use `src/lib/ziwei/cities.ts`.
 - I Ching hexagrams are fully translated into Vietnamese with original Chinese characters preserved for reference.
 
+## Design system
+- Dark theme dominant (`#0a0a0a` bg, `#14110f` surface, `#D4AF37` gold accent, `#F5F5F0` text).
+- Heading font: Playfair Display (serif); body font: Inter (sans-serif).
+- All pages responsive: desktop 3-column layouts collapse to stacked on mobile.
+- Interactive animations: coin flip, tube shake, card flip 3D, hexagram build-up.
+
 ## Current limitations / TODO
 - Kinh Dịch has full line judgments (tóm lược); add full line-by-line translations from original text later.
-- Xin Xăm uses sample lot categories; expand to full xăm dataset with 100+ lots.
-- Tarot uses sample major arcana cards; expand to full 78-card deck with detailed meanings.
+- Xin Xăm uses 10 lots; expand to full xăm dataset with 100+ lots.
+- Tarot uses 22 major arcana cards; expand to full 78-card deck with minor arcana and detailed meanings.
+- Tarot card images: currently text-only; add Rider-Waite card images.
 - Auth/payment/history are mocks; replace with real providers (NextAuth, PayOS/Stripe, Vercel Postgres).
 - No persistent database yet; add Vercel Postgres or Supabase for user data and reading history.
 - No LLM integration yet; connect AI provider (OpenAI/Claude/Gemini) for deep reading interpretation.
 - Tử Vi patterns (cách cục) engine exists but not wired to API output yet.
 - Add PDF report generation for readings.
 - Add social sharing (OG image per chart/reading).
-- Mobile-optimized chart board visualization (currently text-only).
 
 ## Git/deploy
 - GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`
