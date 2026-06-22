@@ -24,10 +24,12 @@ Vietnamese spiritual services MVP for Vercel deployment.
 
 ## Main files
 - `src/app/(app)/page.tsx`: homepage per `tuvi-ui-spec.md` — hero, 4 signature module cards, today strip, AI promo, quick chips.
-- `src/app/(app)/tu-vi/page.tsx`: Tử Vi form page per spec — module hero, form card, giờ sinh chips, tỉnh/thành bottom sheet, preview state.
-- `src/app/(app)/kinh-dich/page.tsx`: Kinh Dịch module page — method cards + lục hào UI.
-- `src/app/(app)/xin-xam/page.tsx`: Xin Xăm module page — theme cards + xăm result card UI.
-- `src/app/(app)/tarot/page.tsx`: Tarot module page — spread picker + question textarea + deck reveal UI.
+- `src/app/(app)/tu-vi/page.tsx`: Tử Vi form page — submit to result page, giờ sinh chips, searchable province/city picker, longitude display.
+- `src/app/(app)/kinh-dich/page.tsx`: Kinh Dịch module page — 3 modes (Lục Hào / Thiên Ý / Mai Hoa), 6-flip UI, submit to result page.
+- `src/app/(app)/xin-xam/page.tsx`: Xin Xăm module page — theme cards, shake preview, submit to result page, AI CTA.
+- `src/app/(app)/tarot/page.tsx`: Tarot module page — spread picker, question textarea, reveal preview, submit to result page, AI CTA.
+- `src/app/(app)/goi-dich-vu/page.tsx`: pricing/paywall page for AI flow.
+- `src/app/(app)/ket-qua/[slug]/page.tsx`: result pages for Tử Vi / Kinh Dịch / Xin Xăm / Tarot.
 - `src/app/(app)/layout.tsx`: shared app shell with header, footer, mobile bottom nav.
 - `src/components/layout/Header.tsx`: sticky blurred header.
 - `src/components/layout/BottomNav.tsx`: fixed mobile bottom nav with elevated center AI button.
@@ -76,14 +78,15 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Interactive animations: coin flip, tube shake, card flip 3D, glow pulse, page-enter fade.
 
 ## Current limitations / TODO
-- Kinh Dịch has full line judgments (tóm lược); add full line-by-line translations from original text later.
-- Xin Xăm uses 10 lots; expand to full xăm dataset with 100+ lots.
-- Tarot uses 22 major arcana cards; expand to full 78-card deck with minor arcana and detailed meanings.
+- Tử Vi result page now renders real `generateChart()` data, summary, Đại Hạn, Tứ Hóa, and palace grid; next step is richer tab interaction and deeper pattern output.
+- Kinh Dịch page now supports 3 entry flows and result page cards; next step is real Mai Hoa derivation math and richer Thiên Ý orchestration.
+- Xin Xăm still uses mock lots; expand to full xăm dataset with 100+ lots, Hán/Nôm text, dịch nghĩa, and phẩm cấp.
+- Tarot still uses reduced deck logic; expand to full 78-card deck with minor arcana and detailed upright/reversed meanings.
 - Tarot card images: currently text-only; add Rider-Waite card images.
 - Auth/payment/history are mocks; replace with real providers (NextAuth, PayOS/Stripe, Vercel Postgres).
 - No persistent database yet; add Vercel Postgres or Supabase for user data and reading history.
 - No LLM integration yet; connect AI provider (OpenAI/Claude/Gemini) for deep reading interpretation.
-- Tử Vi patterns (cách cục) engine exists but not wired to API output yet.
+- Add premium gating between result pages and AI flow.
 - Add PDF report generation for readings.
 - Add social sharing (OG image per chart/reading).
 
