@@ -8,6 +8,10 @@ export interface ReadingInput {
   service: ServiceKey;
   name?: string;
   question?: string;
+  spread?: '1' | '3';
+  method?: 'luchao' | 'thieny' | 'maihoa';
+  objectName?: string;
+  datetime?: string;
   birthDate?: string;
   birthTime?: string;
   gender?: 'male' | 'female' | 'other';
@@ -24,7 +28,73 @@ export interface ReadingResult {
 }
 
 const lots = ['Thượng thượng', 'Thượng', 'Trung bình', 'Trung', 'Hạ nhưng chuyển được'];
-const tarot = ['Kẻ Khờ', 'Nhà Ảo Thuật', 'Nữ Tư Tế', 'Hoàng Hậu', 'Hoàng Đế', 'Tình Nhân', 'Chiến Xa', 'Ẩn Sĩ', 'Bánh Xe Số Phận', 'Công Lý', 'Ngôi Sao', 'Mặt Trời'];
+
+const MAJOR_ARCANA = [
+  'Kẻ Khờ', 'Nhà Ảo Thuật', 'Nữ Tư Tế', 'Hoàng Hậu', 'Hoàng Đế', 'Giáo Hoàng', 'Tình Nhân', 'Chiến Xa', 'Sức Mạnh', 'Ẩn Sĩ', 'Bánh Xe Số Phận', 'Công Lý', 'Người Treo Ngược', 'Cái Chết', 'Tiết Độ', 'Quỷ Dữ', 'Tòa Tháp', 'Ngôi Sao', 'Mặt Trăng', 'Mặt Trời', 'Phán Xét', 'Thế Giới',
+] as const;
+
+const MINOR_RANKS = ['Át', 'Hai', 'Ba', 'Bốn', 'Năm', 'Sáu', 'Bảy', 'Tám', 'Chín', 'Mười', 'Tiểu Đồng', 'Kỵ Sĩ', 'Hoàng Hậu', 'Vua'] as const;
+const MINOR_SUITS = ['Gậy', 'Cốc', 'Kiếm', 'Tiền'] as const;
+const SUIT_MEANINGS: Record<(typeof MINOR_SUITS)[number], string> = {
+  Gậy: 'hành động, đam mê, động lực',
+  Cốc: 'cảm xúc, kết nối, trực giác',
+  Kiếm: 'tư duy, xung đột, quyết định',
+  Tiền: 'tài chính, công việc, vật chất',
+};
+
+export interface TarotCardDraw {
+  name: string;
+  arcana: 'major' | 'minor';
+  suit?: (typeof MINOR_SUITS)[number];
+  rank?: (typeof MINOR_RANKS)[number];
+  reversed: boolean;
+  uprightMeaning: string;
+  reversedMeaning: string;
+}
+
+function tarotMeaning(name: string, arcana: 'major' | 'minor', suit?: (typeof MINOR_SUITS)[number], rank?: (typeof MINOR_RANKS)[number]) {
+  if (arcana === 'major') {
+    return {
+      upright: `${name}: chu kỳ lớn, bài học rõ, nên nhìn bức tranh rộng trước khi quyết.`,
+      reversed: `${name} ngược: năng lượng bị nghẽn hoặc đi lệch, cần chậm lại để sửa gốc.`,
+    };
+  }
+
+  const suitMeaning = suit ? SUIT_MEANINGS[suit] : 'năng lượng đời sống';
+  const rankMeaning = rank === 'Át' ? 'khởi đầu mới' : rank === 'Mười' ? 'điểm tròn chu kỳ' : rank === 'Tiểu Đồng' ? 'tin tức hoặc học bài mới' : rank === 'Kỵ Sĩ' ? 'động lực đang tiến' : rank === 'Hoàng Hậu' ? 'nuôi dưỡng và thu hút' : rank === 'Vua' ? 'kiểm soát và trưởng thành' : `${rank?.toLowerCase()} bậc trong tiến trình`;
+  return {
+    upright: `${name}: ${rankMeaning}, trọng tâm ở ${suitMeaning}.`,
+    reversed: `${name} ngược: ${suitMeaning} dễ lệch nhịp, cần rà lại cách dùng năng lượng này.`,
+  };
+}
+
+export function drawTarotCards(question: string, spread: '1' | '3' = '3'): TarotCardDraw[] {
+  const deck: TarotCardDraw[] = [
+    ...MAJOR_ARCANA.map((name) => {
+      const meaning = tarotMeaning(name, 'major');
+      return { name, arcana: 'major' as const, reversed: false, uprightMeaning: meaning.upright, reversedMeaning: meaning.reversed };
+    }),
+    ...MINOR_SUITS.flatMap((suit) => MINOR_RANKS.map((rank) => {
+      const name = `${rank} ${suit}`;
+      const meaning = tarotMeaning(name, 'minor', suit, rank);
+      return { name, arcana: 'minor' as const, suit, rank, reversed: false, uprightMeaning: meaning.upright, reversedMeaning: meaning.reversed };
+    })),
+  ];
+
+  let state = hash(`${question}|${spread}|tarot-78`);
+  const total = spread === '1' ? 1 : 3;
+  const picks: TarotCardDraw[] = [];
+
+  for (let i = 0; i < total; i += 1) {
+    state = Math.imul(state ^ (i + 1), 16777619) >>> 0;
+    const index = state % deck.length;
+    const [card] = deck.splice(index, 1);
+    state = Math.imul(state ^ 2246822519, 3266489917) >>> 0;
+    picks.push({ ...card, reversed: (state & 1) === 1 });
+  }
+
+  return picks;
+}
 
 function hash(value: string) {
   let h = 2166136261;
@@ -86,11 +156,12 @@ export function createReading(input: ReadingInput): ReadingResult {
   }
 
   if (input.service === 'kinh-dich') {
-    const reading = castIChing(question);
+    const reading = castIChing({ method: input.method, question, objectName: input.objectName, datetime: input.datetime });
     return {
       title: `Quẻ Kinh Dịch: ${reading.hexagram.name}`,
       summary: reading.summary,
       details: [
+        `Phương pháp: ${reading.method === 'maihoa' ? 'Mai Hoa' : reading.method === 'thieny' ? 'Thiên Ý' : 'Lục Hào'}. ${reading.methodDetail}`,
         `Quẻ chủ: ${reading.hexagram.name} (${reading.hexagram.han}) — ${reading.hexagram.judgment}`,
         `Hình ảnh: ${reading.hexagram.image}`,
         ...reading.lines.map(line => `Hào ${line.position}: ${line.yinYang}${line.moving ? ' (động)' : ''} — ${line.text}`),
@@ -110,11 +181,13 @@ export function createReading(input: ReadingInput): ReadingResult {
     };
   }
 
-  const cards = [pick(tarot, seed), pick(tarot, seed, 5), pick(tarot, seed, 9)];
+  const spread = input.spread === '1' ? '1' : '3';
+  const cards = drawTarotCards(question, spread);
+  const slots = spread === '1' ? ['Thông điệp chính'] : ['Quá khứ', 'Hiện tại', 'Hướng đi'];
   return {
-    title: 'Tarot 3 lá',
-    summary: `Quá khứ - hiện tại - hướng đi: ${cards.join(' / ')}.`,
-    details: [`${cards[0]}: gốc vấn đề.`, `${cards[1]}: năng lượng hiện tại.`, `${cards[2]}: hướng hành động.`],
-    advice: 'Đừng hỏi Tarot thay cho quyết định; dùng nó để soi góc mù và chọn bước kế tiếp.',
+    title: spread === '1' ? 'Tarot 1 lá' : 'Tarot 3 lá',
+    summary: `${spread === '1' ? 'Lá bài hiện lên' : 'Trải bài'}: ${cards.map((card) => `${card.name}${card.reversed ? ' (ngược)' : ' (xuôi)'}`).join(' / ')}.`,
+    details: cards.map((card, index) => `${slots[index]}: ${card.name}${card.reversed ? ' ngược' : ' xuôi'} — ${card.reversed ? card.reversedMeaning : card.uprightMeaning}`),
+    advice: spread === '1' ? 'Một lá hợp câu hỏi nhanh; nếu còn mâu thuẫn, chuyển sang trải 3 lá để thấy tiến trình rõ hơn.' : 'Đừng hỏi Tarot thay cho quyết định; dùng nó để soi góc mù và chọn bước kế tiếp.',
   };
 }

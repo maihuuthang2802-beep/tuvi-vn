@@ -17,6 +17,7 @@ export interface Hexagram {
 }
 
 export interface IChingReading {
+  method: 'luchao' | 'thieny' | 'maihoa';
   question: string;
   hexagram: Hexagram;
   changedHexagram?: Hexagram;
@@ -24,6 +25,14 @@ export interface IChingReading {
   lines: IChingLine[];
   summary: string;
   advice: string;
+  methodDetail: string;
+}
+
+export interface IChingInput {
+  method?: 'luchao' | 'thieny' | 'maihoa';
+  question?: string;
+  objectName?: string;
+  datetime?: string;
 }
 
 type TrigramKey = 'can' | 'doai' | 'ly' | 'chan' | 'ton' | 'kham' | 'canNui' | 'khon';
@@ -152,26 +161,27 @@ function findHexagram(upper: TrigramKey, lower: TrigramKey): Hexagram {
   return { ...base, upper: TRIGRAM_NAME[upper], lower: TRIGRAM_NAME[lower] };
 }
 
-function lineText(line: IChingLine) {
-  if (line.value === 6) return 'Lão âm: âm cực hóa dương, việc cũ cần đổi mềm sang cứng.';
-  if (line.value === 9) return 'Lão dương: dương cực hóa âm, hành động mạnh cần biết dừng.';
-  if (line.value === 7) return 'Thiếu dương: lực đang lên, có thể chủ động nhưng chưa nóng vội.';
-  return 'Thiếu âm: nên giữ, dưỡng lực, quan sát thêm.';
+function normalizeMod(value: number, mod: number) {
+  const result = value % mod;
+  return result === 0 ? mod : result;
 }
 
-export function castIChing(question: string, now = new Date()): IChingReading {
-  const cleanQuestion = question.trim() || 'Tôi nên làm gì trong tình huống hiện tại?';
-  let seed = hashText(`${cleanQuestion}|${now.toISOString().slice(0, 10)}`);
-  const values: Array<6 | 7 | 8 | 9> = [];
+function trigramByNumber(value: number): TrigramKey {
+  const mapping: Record<number, TrigramKey> = {
+    1: 'can',
+    2: 'doai',
+    3: 'ly',
+    4: 'chan',
+    5: 'ton',
+    6: 'kham',
+    7: 'canNui',
+    8: 'khon',
+  };
+  return mapping[normalizeMod(value, 8)] || 'khon';
+}
 
-  for (let i = 0; i < 6; i += 1) {
-    seed = next(seed);
-    const coins = [seed & 1, (seed >> 3) & 1, (seed >> 7) & 1];
-    const heads = coins.reduce((sum, coin) => sum + coin, 0);
-    values.push((6 + heads) as 6 | 7 | 8 | 9);
-  }
-
-  const lines = values.map((value, index) => ({
+function makeReading(method: 'luchao' | 'thieny' | 'maihoa', question: string, lineValues: Array<6 | 7 | 8 | 9>, methodDetail: string): IChingReading {
+  const lines = lineValues.map((value, index) => ({
     position: index + 1,
     value,
     yinYang: value % 2 === 0 ? 'âm' as const : 'dương' as const,
@@ -191,12 +201,64 @@ export function castIChing(question: string, now = new Date()): IChingReading {
   const movingText = movingLines.length ? `Hào động: ${movingLines.map(line => line.position).join(', ')}.` : 'Không có hào động: lấy quẻ chủ làm trọng tâm.';
 
   return {
-    question: cleanQuestion,
+    method,
+    question,
     hexagram,
     changedHexagram,
     movingLines,
     lines,
     summary: `${hexagram.name} (${hexagram.han}), thượng quái ${hexagram.upper}, hạ quái ${hexagram.lower}. ${movingText}`,
     advice: changedHexagram ? `Quẻ biến sang ${changedHexagram.name}: hiện trạng cần đổi theo hào động, kết quả phụ thuộc cách xử lý điểm chuyển.` : 'Quẻ tĩnh: giữ đúng nguyên tắc của quẻ chủ, chưa nên đổi hướng lớn.',
+    methodDetail,
   };
+}
+
+function lineText(line: IChingLine) {
+  if (line.value === 6) return 'Lão âm: âm cực hóa dương, việc cũ cần đổi mềm sang cứng.';
+  if (line.value === 9) return 'Lão dương: dương cực hóa âm, hành động mạnh cần biết dừng.';
+  if (line.value === 7) return 'Thiếu dương: lực đang lên, có thể chủ động nhưng chưa nóng vội.';
+  return 'Thiếu âm: nên giữ, dưỡng lực, quan sát thêm.';
+}
+
+export function castIChing(input: string | IChingInput, now = new Date()): IChingReading {
+  const payload = typeof input === 'string' ? { question: input } : input;
+  const method = payload.method || 'luchao';
+  const cleanQuestion = payload.question?.trim() || 'Tôi nên làm gì trong tình huống hiện tại?';
+
+  if (method === 'maihoa') {
+    const date = payload.datetime ? new Date(payload.datetime) : now;
+    const safeDate = Number.isNaN(date.getTime()) ? now : date;
+    const upperSeed = safeDate.getFullYear() + safeDate.getMonth() + 1 + safeDate.getDate();
+    const lowerSeed = upperSeed + safeDate.getHours() + 1;
+    const movingSeed = lowerSeed + safeDate.getMinutes() + 1;
+    const upper = trigramByNumber(upperSeed);
+    const lower = trigramByNumber(lowerSeed);
+    const movingLine = normalizeMod(movingSeed, 6);
+    const bits = `${TRIGRAM_BITS[lower]}${TRIGRAM_BITS[upper]}`.split('') as Array<'0' | '1'>;
+    const lineValues = bits.map((bit, index) => (index + 1 === movingLine ? (bit === '1' ? 9 : 6) : (bit === '1' ? 7 : 8)) as 6 | 7 | 8 | 9);
+    return makeReading('maihoa', cleanQuestion, lineValues, `Mai Hoa dùng năm-tháng-ngày định thượng quái, cộng giờ định hạ quái, cộng phút định hào động ${movingLine}.`);
+  }
+
+  if (method === 'thieny') {
+    const objectName = payload.objectName?.trim() || cleanQuestion;
+    const seed = hashText(objectName.normalize('NFKD'));
+    const upper = trigramByNumber((seed % 8) + 1);
+    const lower = trigramByNumber((Math.floor(seed / 8) % 8) + 1);
+    const movingLine = normalizeMod(Math.floor(seed / 64) + objectName.length, 6);
+    const bits = `${TRIGRAM_BITS[lower]}${TRIGRAM_BITS[upper]}`.split('') as Array<'0' | '1'>;
+    const lineValues = bits.map((bit, index) => (index + 1 === movingLine ? (bit === '1' ? 9 : 6) : (bit === '1' ? 7 : 8)) as 6 | 7 | 8 | 9);
+    return makeReading('thieny', cleanQuestion, lineValues, `Thiên Ý lấy tâm niệm “${objectName}” làm hạt giống tượng số, suy ra quẻ và hào động ${movingLine}.`);
+  }
+
+  let seed = hashText(`${cleanQuestion}|${now.toISOString().slice(0, 10)}`);
+  const values: Array<6 | 7 | 8 | 9> = [];
+
+  for (let i = 0; i < 6; i += 1) {
+    seed = next(seed);
+    const coins = [seed & 1, (seed >> 3) & 1, (seed >> 7) & 1];
+    const heads = coins.reduce((sum, coin) => sum + coin, 0);
+    values.push((6 + heads) as 6 | 7 | 8 | 9);
+  }
+
+  return makeReading('luchao', cleanQuestion, values, 'Lục Hào mô phỏng 3 đồng tiền cho 6 lượt gieo, lấy quẻ chủ và quẻ biến theo hào động.');
 }

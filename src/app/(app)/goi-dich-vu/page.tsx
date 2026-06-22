@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import ModuleHero from '@/components/shared/ModuleHero';
 
+const SERVICE_LABELS: Record<string, string> = {
+  'tu-vi': 'Tử Vi',
+  'kinh-dich': 'Kinh Dịch',
+  'xin-xam': 'Xin Xăm',
+  tarot: 'Tarot',
+};
+
 const plans = [
   {
     name: 'Miễn phí',
@@ -31,25 +38,56 @@ const plans = [
   },
 ];
 
-export default function GoiDichVuPage() {
+export default async function GoiDichVuPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const query = await searchParams;
+  const flatQuery = Object.fromEntries(Object.entries(query).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
+  const selectedPlan = flatQuery.plan === 'pro' ? 'pro' : 'starter';
+  const service = flatQuery.service || '';
+  const serviceLabel = SERVICE_LABELS[service] || 'kết quả hiện tại';
+  const returnTo = flatQuery.returnTo || (service ? `/ket-qua/${service}` : '/');
+
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon="✦" title="Gói Dịch Vụ AI" subtitle="Paywall rõ · CTA rõ · Mở khóa luận giải chuyên sâu" accent="var(--color-ai)" />
+      <section className="mx-5 mt-5 rounded-[24px] border border-[rgba(44,195,184,0.3)] bg-ai-bg p-5 md:mx-auto md:max-w-[1100px]">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[11px] uppercase tracking-[2px] text-ai">Paywall</div>
+            <h2 className="mt-2 font-[var(--font-display)] text-[24px] font-bold text-text">Mở AI cho {serviceLabel}</h2>
+            <p className="mt-2 text-[14px] text-text-2">Chọn gói để mở luận giải chuyên sâu. Luồng hiện dùng checkout mock và trả về trang kết quả cũ.</p>
+          </div>
+          <Link href={returnTo} className="rounded-[14px] border border-white/15 bg-white/10 px-4 py-3 text-center text-[14px] font-semibold text-text">Quay lại kết quả</Link>
+        </div>
+      </section>
       <section className="mx-5 mt-5 grid gap-4 md:mx-auto md:max-w-[1100px] md:grid-cols-3">
-        {plans.map((plan) => (
-          <article key={plan.name} className={`rounded-[24px] border p-5 ${plan.accent}`}>
-            <div className="text-[11px] uppercase tracking-[2px] text-ai">TuVi.vn AI</div>
-            <h2 className="mt-3 font-[var(--font-display)] text-[28px] font-bold text-text">{plan.name}</h2>
-            <div className="mt-2 text-[30px] font-bold text-gold">{plan.price}</div>
-            <p className="mt-3 text-[14px] text-text-2">{plan.desc}</p>
-            <ul className="mt-4 space-y-2 text-[14px] text-text">
-              {plan.features.map((feature) => <li key={feature}>• {feature}</li>)}
-            </ul>
-            <Link href={plan.href} className="mt-5 block rounded-[14px] bg-gradient-to-br from-ai to-[#6BE0D7] px-4 py-3 text-center text-[14px] font-bold text-bg">
-              {plan.cta}
-            </Link>
-          </article>
-        ))}
+        {plans.map((plan) => {
+          const isCheckoutPlan = plan.name !== 'Miễn phí';
+          const planKey = plan.name === 'AI Trọn Gói' ? 'pro' : 'starter';
+          const active = selectedPlan === planKey;
+          return (
+            <article key={plan.name} className={`rounded-[24px] border p-5 ${plan.accent} ${active ? 'ring-2 ring-ai/60' : ''}`}>
+              <div className="text-[11px] uppercase tracking-[2px] text-ai">TuVi.vn AI</div>
+              <h2 className="mt-3 font-[var(--font-display)] text-[28px] font-bold text-text">{plan.name}</h2>
+              <div className="mt-2 text-[30px] font-bold text-gold">{plan.price}</div>
+              <p className="mt-3 text-[14px] text-text-2">{plan.desc}</p>
+              <ul className="mt-4 space-y-2 text-[14px] text-text">
+                {plan.features.map((feature) => <li key={feature}>• {feature}</li>)}
+              </ul>
+              {isCheckoutPlan ? (
+                <form action="/api/checkout" method="post" className="mt-5 space-y-3">
+                  <input type="hidden" name="plan" value={planKey} />
+                  <input type="hidden" name="service" value={service} />
+                  <input type="hidden" name="returnTo" value={returnTo} />
+                  <button className="block w-full rounded-[14px] bg-gradient-to-br from-ai to-[#6BE0D7] px-4 py-3 text-center text-[14px] font-bold text-bg">{active ? 'Tiếp tục checkout mock' : plan.cta}</button>
+                </form>
+              ) : (
+                <Link href={plan.href} className="mt-5 block rounded-[14px] bg-gradient-to-br from-ai to-[#6BE0D7] px-4 py-3 text-center text-[14px] font-bold text-bg">
+                  {plan.cta}
+                </Link>
+              )}
+            </article>
+          );
+        })}
       </section>
       <section className="mx-5 mt-5 rounded-[24px] border border-border bg-surface p-5 md:mx-auto md:max-w-[1100px]">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

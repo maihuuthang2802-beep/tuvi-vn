@@ -59,7 +59,9 @@ export default function KinhDichPage() {
       </section>
       <form action="/ket-qua/kinh-dich" className="mx-5 mt-5 rounded-[20px] border border-border bg-surface p-5 md:mx-auto md:max-w-[1100px]">
         <input type="hidden" name="method" value={active} />
-        <input type="hidden" name="question" value={derivedQuestion} />
+        <input type="hidden" name="question" value={active === 'thieny' ? question : derivedQuestion} />
+        <input type="hidden" name="objectName" value={objectName} />
+        <input type="hidden" name="datetime" value={maiHoaTime} />
         <div className="rounded-[18px] border border-kinh/20 bg-kinh-bg p-4 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-kinh">Flow đang dùng</div>
           <div className="mt-2 font-semibold text-text">{activeMethod.title}</div>
@@ -113,6 +115,8 @@ export default function KinhDichPage() {
         <div className="mt-5 rounded-[18px] border border-border bg-surface-2 p-4 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-gold">Dữ liệu sẽ gửi sang trang kết quả</div>
           <div className="mt-2">{derivedQuestion}</div>
+          {active === 'thieny' && objectName.trim() ? <div className="mt-2 text-[13px] text-text-3">Tâm niệm: {objectName.trim()}</div> : null}
+          {active === 'maihoa' ? <div className="mt-2 text-[13px] text-text-3">Mốc thời gian Mai Hoa: {maiHoaTime}</div> : null}
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <button className="rounded-[14px] bg-gradient-to-br from-kinh to-[#7AC89B] px-4 py-4 text-[15px] font-bold text-bg">Xem kết quả quẻ →</button>

@@ -79,16 +79,23 @@ Vietnamese spiritual services MVP for Vercel deployment.
 
 ## Current limitations / TODO
 - Tử Vi result page now renders real `generateChart()` data, summary, Đại Hạn, Tứ Hóa, and palace grid; next step is richer tab interaction and deeper pattern output.
-- Kinh Dịch page now supports 3 entry flows and result page cards; next step is real Mai Hoa derivation math and richer Thiên Ý orchestration.
-- Xin Xăm still uses mock lots; expand to full xăm dataset with 100+ lots, Hán/Nôm text, dịch nghĩa, and phẩm cấp.
-- Tarot still uses reduced deck logic; expand to full 78-card deck with minor arcana and detailed upright/reversed meanings.
+- Premium gating is now wired from result pages to `/goi-dich-vu` and mock checkout returns to result page with unlocked state; next step is replacing query-string mock state with real entitlement/auth/payment state.
+- Kinh Dịch now supports Lục Hào, Mai Hoa, and Thiên Ý with method-aware derivation in `src/lib/iching/engine.ts`; next step is deeper interpretation quality and, if needed, stricter classical Mai Hoa rules.
+- Tarot now supports full 78-card deck with major/minor arcana and upright/reversed meanings from `drawTarotCards()` in `src/lib/readings.ts`; next step is card images and richer per-card meaning dataset.
 - Tarot card images: currently text-only; add Rider-Waite card images.
+- Xin Xăm still uses mock lots; expand to full xăm dataset with 100+ lots, Hán/Nôm text, dịch nghĩa, and phẩm cấp.
 - Auth/payment/history are mocks; replace with real providers (NextAuth, PayOS/Stripe, Vercel Postgres).
 - No persistent database yet; add Vercel Postgres or Supabase for user data and reading history.
 - No LLM integration yet; connect AI provider (OpenAI/Claude/Gemini) for deep reading interpretation.
-- Add premium gating between result pages and AI flow.
 - Add PDF report generation for readings.
 - Add social sharing (OG image per chart/reading).
+
+## Recent session progress
+- Phase 1 done: premium gating flow across `src/app/(app)/ket-qua/[slug]/page.tsx`, `src/app/(app)/goi-dich-vu/page.tsx`, and `src/app/api/checkout/route.ts`.
+- Phase 2 done: Kinh Dịch form/result now pass `method`, `objectName`, `datetime`; engine returns method detail, quẻ chủ/quẻ biến, hào động, and six-line summaries.
+- Phase 3 done: Tarot form/result now support spread `1` or `3`; result page renders deterministic 78-card draws with reversed state.
+- Verification baseline for these phases: `npm run lint` and `npm run build` both passed after each phase.
+- Recommended next implementation phase: Xin Xăm dataset expansion, then real auth/payment/history + database.
 
 ## Git/deploy
 - GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`
