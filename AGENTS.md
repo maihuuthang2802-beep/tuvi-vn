@@ -23,11 +23,22 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Vercel target
 
 ## Main files
-- `src/app/page.tsx`: landing page with 4 service cards (Tử Vi, Kinh Dịch, Xin Xăm, Tarot).
-- `src/app/tu-vi/page.tsx`: Tử Vi page — 3-column layout: left sidebar (form + palace list), center (4×4 chart grid), right sidebar (star details + interpretation).
-- `src/app/kinh-dich/page.tsx`: Kinh Dịch page — 3-tab switcher: Lục Hào (coin casting animation), Thiên Ý (intent-based), Mai Hoa (time-based). Hexagram rendering with line-by-line display.
-- `src/app/xin-xam/page.tsx`: Xin Xăm page — bamboo tube shake animation, random lot draw, expandable poem + 4-category interpretation (tài lộc, tình duyên, gia đạo, sức khỏe).
-- `src/app/tarot/page.tsx`: Tarot page — 1 or 3 card spread, 3D flip animation, upright/reversed meanings.
+- `src/app/(app)/page.tsx`: homepage per `tuvi-ui-spec.md` — hero, 4 signature module cards, today strip, AI promo, quick chips.
+- `src/app/(app)/tu-vi/page.tsx`: Tử Vi form page per spec — module hero, form card, giờ sinh chips, tỉnh/thành bottom sheet, preview state.
+- `src/app/(app)/kinh-dich/page.tsx`: Kinh Dịch module page — method cards + lục hào UI.
+- `src/app/(app)/xin-xam/page.tsx`: Xin Xăm module page — theme cards + xăm result card UI.
+- `src/app/(app)/tarot/page.tsx`: Tarot module page — spread picker + question textarea + deck reveal UI.
+- `src/app/(app)/layout.tsx`: shared app shell with header, footer, mobile bottom nav.
+- `src/components/layout/Header.tsx`: sticky blurred header.
+- `src/components/layout/BottomNav.tsx`: fixed mobile bottom nav with elevated center AI button.
+- `src/components/layout/Footer.tsx`: footer + disclaimer.
+- `src/components/layout/BottomSheet.tsx`: reusable bottom sheet picker.
+- `src/components/home/ModuleCards.tsx`: 4-card signature home grid.
+- `src/components/home/TodayStrip.tsx`: “Hôm Nay” strip.
+- `src/components/home/AIPromoCard.tsx`: AI promo card.
+- `src/components/home/QuickChips.tsx`: horizontally scrollable quick actions.
+- `src/components/shared/ModuleHero.tsx`: shared small hero for module pages.
+- `src/components/shared/GlowCard.tsx`: reusable glow card shell.
 - `src/lib/readings.ts`: reading orchestrator; Tử Vi/Kinh Dịch use real engines; Xin Xăm/Tarot use MVP rules.
 - `src/lib/ziwei/algorithm.ts`: real Tử Vi chart generation via `iztro`.
 - `src/lib/ziwei/cities.ts`: Vietnam provinces/cities and longitude data for true solar time.
@@ -56,10 +67,13 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - I Ching hexagrams are fully translated into Vietnamese with original Chinese characters preserved for reference.
 
 ## Design system
-- Dark theme dominant (`#0a0a0a` bg, `#14110f` surface, `#D4AF37` gold accent, `#F5F5F0` text).
-- Heading font: Playfair Display (serif); body font: Inter (sans-serif).
-- All pages responsive: desktop 3-column layouts collapse to stacked on mobile.
-- Interactive animations: coin flip, tube shake, card flip 3D, hexagram build-up.
+- Active spec source: `C:\Users\Mrwin\Downloads\tuvi-ui-spec.md`.
+- Theme: “Đêm Thiêng” — dark mystical, temple gold, subtle glow.
+- Core colors: `#0D0B19` bg, `#181530` surface, `#221E3E` surface-2, `#C9A96E` gold, `#EDE7D3` text.
+- Module colors: Tử Vi = gold, Kinh Dịch = green jade, Xin Xăm = vermilion red, Tarot = mystical purple, AI = cyan.
+- Fonts: `Cormorant Garamond` for display + `Be Vietnam Pro` for UI.
+- Mobile-first: base viewport ~390px, desktop breakpoint ~768px.
+- Interactive animations: coin flip, tube shake, card flip 3D, glow pulse, page-enter fade.
 
 ## Current limitations / TODO
 - Kinh Dịch has full line judgments (tóm lược); add full line-by-line translations from original text later.

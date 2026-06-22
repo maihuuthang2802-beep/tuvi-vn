@@ -1,192 +1,95 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { generateChart } from '@/lib/ziwei/algorithm';
-import type { BirthInfo, ZiweiChart, Palace } from '@/lib/ziwei/types';
-import { BRANCH_VI, STEM_VI, viPalace, viStar, viSiHua, viWuxingJu } from '@/lib/ziwei/vietnamese';
+import { useMemo, useState } from 'react';
+import BottomSheet from '@/components/layout/BottomSheet';
+import ModuleHero from '@/components/shared/ModuleHero';
 import { PROVINCES } from '@/lib/ziwei/cities';
-import WheelPicker from '@/components/WheelPicker';
 
-const YEARS = Array.from({ length: 80 }, (_, i) => ({ value: String(i + 1945), label: String(i + 1945) }));
-const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Tháng ${i + 1}` }));
-const DAYS = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
-const HOURS = Array.from({ length: 12 }, (_, i) => ({ value: String(i), label: `Giờ ${['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'][i]}`}));
+const HOURS = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
 export default function TuViPage() {
-  const [chart, setChart] = useState<ZiweiChart | null>(null);
-  const [selectedPalace, setSelectedPalace] = useState<Palace | null>(null);
-  const [name, setName] = useState('');
-  const [birthYear, setBirthYear] = useState('1995');
-  const [birthMonth, setBirthMonth] = useState('1');
-  const [birthDay, setBirthDay] = useState('1');
-  const [birthHour, setBirthHour] = useState('0');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [gender, setGender] = useState<'Nam' | 'Nữ'>('Nam');
+  const [calendar, setCalendar] = useState<'Dương lịch' | 'Âm lịch'>('Dương lịch');
+  const [hour, setHour] = useState('Tý');
   const [province, setProvince] = useState('Hà Nội');
-  const [city, setCity] = useState('Hà Nội');
-  const cityList = useMemo(() => PROVINCES.find(p => p.name === province)?.cities || [], [province]);
-  const longitude = cityList.find(c => c.name === city)?.longitude ?? 105.85;
-
-
-  const trueSolarBranch = useCallback(() => {
-    return Number(birthHour);
-  }, [birthHour]);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const info: BirthInfo = {
-      year: Number(birthYear),
-      month: Number(birthMonth),
-      day: Number(birthDay),
-      hour: trueSolarBranch(),
-      gender,
-      name: name || undefined,
-      province,
-      city,
-      longitude,
-    };
-    const chartData = generateChart(info);
-    setChart(chartData);
-    setSelectedPalace(null);
-  }
+  const [openProvince, setOpenProvince] = useState(false);
+  const [query, setQuery] = useState('');
+  const provinces = useMemo(() => PROVINCES.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())), [query]);
 
   return (
-    <main className="min-h-screen bg-bg text-text" style={{ fontFamily: 'var(--font-body)' }}>
-
-      {!chart ? (
-        <div className="mx-auto max-w-lg px-4 py-8">
-          <h1 className="text-center text-3xl text-gold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>Lập Lá Số Tử Vi</h1>
-          <p className="text-center text-sm text-muted mb-6">Engine Tử Vi chuẩn · Dữ liệu tỉnh thành Việt Nam</p>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <label className="block text-sm font-medium text-muted">Họ tên</label>
-            <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none" placeholder="Nguyễn Văn A" />
-            <div>
-              <label className="block text-sm font-medium text-muted mb-2">Ngày sinh</label>
-              <div className="flex justify-center gap-2" style={{ height: 132 }}>
-                <WheelPicker options={DAYS} value={birthDay} onChange={setBirthDay} />
-                <WheelPicker options={MONTHS} value={birthMonth} onChange={setBirthMonth} />
-                <WheelPicker options={YEARS} value={birthYear} onChange={setBirthYear} />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-muted mb-2">Giờ sinh</label>
-              <div className="flex justify-center gap-2" style={{ height: 132 }}>
-                <WheelPicker options={HOURS} value={birthHour} onChange={setBirthHour} />
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-muted">Giới tính</label>
-              <button type="button" onClick={() => setGender('male')} className={`px-4 py-2 rounded-full text-sm border ${gender === 'male' ? 'border-gold text-gold bg-gold-soft' : 'border-border text-muted'}`}>Nam</button>
-              <button type="button" onClick={() => setGender('female')} className={`px-4 py-2 rounded-full text-sm border ${gender === 'female' ? 'border-gold text-gold bg-gold-soft' : 'border-border text-muted'}`}>Nữ</button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-muted">Tỉnh/thành</label>
-                <select value={province} onChange={e => { const p = e.target.value; const c = PROVINCES.find(x => x.name === p)?.cities[0]?.name || ''; setProvince(p); setCity(c); }} className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none">
-                  {PROVINCES.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted">Thành phố</label>
-                <select value={city} onChange={e => setCity(e.target.value)} className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none">
-                  {cityList.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                </select>
-              </div>
-            </div>
-            <button type="submit" className="w-full rounded-xl bg-gold py-4 font-semibold text-bg">Lập lá số</button>
-          </form>
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-0">
-          {/* left sidebar: form */}
-          <aside className="w-full lg:w-80 border-r border-border p-4 space-y-3 max-h-screen overflow-y-auto shrink-0">
-            <button onClick={() => { setChart(null); setSelectedPalace(null); }} className="text-sm text-muted hover:text-gold">← Nhập lại</button>
-            <div className="rounded-xl border border-border p-4 space-y-2 text-sm">
-              <p className="text-gold font-semibold">{name || 'Đương số'}</p>
-              <p className="text-muted">{STEM_VI[chart.lunarInfo.yearStem]} {BRANCH_VI[chart.lunarInfo.yearBranch]}</p>
-              <p className="text-muted">Âm lịch {chart.lunarInfo.lunarDay}/{chart.lunarInfo.lunarMonth}/{chart.lunarInfo.lunarYear} {chart.lunarInfo.isLeapMonth ? '(nhuận)' : ''}</p>
-              <p className="text-muted">{viWuxingJu(chart.wuxingJuName)}</p>
-              <p className="text-muted">Tuổi: {chart.currentAge}</p>
-            </div>
-            <div className="space-y-2">
-              {chart.palaces.map(p => (
-                <button
-                  key={p.branch}
-                  onClick={() => setSelectedPalace(prev => prev?.branch === p.branch ? null : p)}
-                  className={`w-full rounded-xl border p-3 text-left text-sm transition ${selectedPalace?.branch === p.branch ? 'border-gold bg-gold-soft' : 'border-border hover:bg-surface'}`}
-                >
-                  <p className="text-xs text-muted">{BRANCH_VI[p.branch]}</p>
-                  <p className="font-medium" style={{ fontFamily: 'var(--font-heading)' }}>{viPalace(p.name)}</p>
-                  <p className="text-xs text-muted">
-                    {p.isEmpty ? 'Vô chính diệu' : p.stars.filter(s => s.type === 'major').map(s => viStar(s.name)).join(' · ')}
-                  </p>
-                </button>
+    <main className="page-enter pb-10">
+      <ModuleHero icon="☯" title="Lập Lá Số Tử Vi" subtitle="Engine chuẩn · Dữ liệu 63 tỉnh thành VN" accent="var(--color-tuvi)" />
+      <section className="mx-5 mt-5 rounded-[20px] border border-border bg-surface p-5 md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[420px_1fr] md:gap-6">
+        <form className="space-y-4">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">HỌ TÊN</label>
+            <input className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" placeholder="Nhập họ tên" />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">NGÀY SINH</label>
+            <input className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" placeholder="dd/mm/yyyy" />
+            <div className="mt-3 flex gap-2">
+              {(['Dương lịch', 'Âm lịch'] as const).map((item) => (
+                <button key={item} type="button" onClick={() => setCalendar(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${calendar === item ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{item}</button>
               ))}
             </div>
-          </aside>
-
-          {/* center: chart */}
-          <section className="flex-1 p-6 flex items-center justify-center min-h-screen">
-            <div className="grid grid-cols-4 grid-rows-4 gap-2 w-full max-w-3xl aspect-square">
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(idx => {
-                const p = chart.palaces[idx];
-                if (!p) return null;
-                const isActive = selectedPalace?.branch === p.branch;
-                const major = p.stars.filter(s => s.type === 'major');
-                return (
-                  <button
-                    key={p.branch}
-                    onClick={() => setSelectedPalace(prev => prev?.branch === p.branch ? null : p)}
-                    className={`rounded-xl border p-1 md:p-2 text-center transition text-xs md:text-sm ${isActive ? 'border-gold bg-gold-soft' : 'border-border hover:bg-surface'}`}
-                  >
-                    <p className="text-[10px] text-muted truncate">{viPalace(p.name)}</p>
-                    {major.map(s => {
-                      const sihuaLabel = s.siHua ? ` (${viSiHua(s.siHua)})` : '';
-                      return <p key={s.name} className="text-gold font-medium truncate">{viStar(s.name)}{sihuaLabel}</p>;
-                    })}
-                    {p.isEmpty && <p className="text-[10px] text-muted italic">Vô chính diệu</p>}
-                    {p.isMingGong && <p className="text-[10px] text-gold">Mệnh</p>}
-                    {p.isShenGong && <p className="text-[10px] text-gold">Thân</p>}
-                  </button>
-                );
-              })}
-              {/* 4 center cells merged */}
-              <div className="row-start-2 col-start-2 row-span-2 col-span-2 flex items-center justify-center rounded-2xl border border-border bg-surface/40">
-                <div className="text-center space-y-2">
-                  <div className="w-8 h-8 mx-auto rounded-full bg-gradient-to-br from-gold to-gold-bright animate-pulse" />
-                  <p className="text-[10px] text-muted">Âm Dương</p>
-                  <p className="text-[10px] text-gold font-semibold">{STEM_VI[chart.lunarInfo.yearStem]} {BRANCH_VI[chart.lunarInfo.yearBranch]}</p>
-                  <p className="text-[10px] text-muted">{viWuxingJu(chart.wuxingJuName)}</p>
-                </div>
-              </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {HOURS.map((item) => (
+                <button key={item} type="button" onClick={() => setHour(item)} className={`rounded-[12px] border px-3 py-3 text-[14px] ${hour === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+              ))}
             </div>
-          </section>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỚI TÍNH</label>
+            <div className="mt-2 flex gap-2">
+              {(['Nam', 'Nữ'] as const).map((item) => (
+                <button key={item} type="button" onClick={() => setGender(item)} className={`flex-1 rounded-[12px] border px-4 py-3 text-[15px] font-semibold ${gender === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">TỈNH/THÀNH</label>
+            <button type="button" onClick={() => setOpenProvince(true)} className="mt-2 flex w-full items-center justify-between rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-left text-[15px] text-text">
+              <span>{province}</span><span className="text-text-2">⌄</span>
+            </button>
+          </div>
+          <div className="space-y-2 text-[13px] text-text-2">
+            <label className="flex items-center gap-2"><input type="checkbox" defaultChecked className="accent-[var(--color-tuvi)]" /> Chân thái dương giờ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" defaultChecked className="accent-[var(--color-tuvi)]" /> Dùng ngày âm lịch</label>
+          </div>
+          <button className="mt-2 w-full rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-[14px] text-[15px] font-bold text-bg">Lập Lá Số →</button>
+        </form>
 
-          {/* right / mobile bottom: insight */}
-          <aside className="w-full lg:w-80 border-l border-border p-4 space-y-3 max-h-screen overflow-y-auto shrink-0">
-            <h3 className="text-gold font-semibold text-sm">Luận giải</h3>
-            {selectedPalace ? (
-              <div className="space-y-3 text-sm">
-                <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>{viPalace(selectedPalace.name)}</p>
-                <p className="text-muted">Địa chi: {BRANCH_VI[selectedPalace.branch]}</p>
-                <p className="text-muted">Thiên can: {STEM_VI[selectedPalace.stem]}</p>
-                {selectedPalace.isEmpty && selectedPalace.borrowedFromName && (
-                  <p className="text-gold">Mượn chính tinh từ cung {viPalace(selectedPalace.borrowedFromName)}</p>
-                )}
-                <div className="space-y-1">
-                  {selectedPalace.stars.map(s => (
-                    <div key={s.name} className="flex items-center justify-between rounded-lg border border-border p-2">
-                      <span>{viStar(s.name)}</span>
-                      <span className="text-xs text-muted">{s.type === 'major' ? 'Chính' : s.type === 'lucky' ? 'Cát' : s.type === 'sha' ? 'Sát' : 'Phụ'} · {s.brightness === 'bright' ? 'Miếu' : s.brightness === 'dim' ? 'Hãm' : 'Bình'}{s.siHua ? ` · ${viSiHua(s.siHua)}` : ''}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted text-sm">Chọn một cung trên bàn lá số để xem luận giải chi tiết.</p>
-            )}
-          </aside>
+        <div className="mt-6 md:mt-0">
+          <div className="rounded-[20px] border border-border bg-surface-2 p-5">
+            <div className="text-[10px] uppercase tracking-[2px] text-gold">XEM TRƯỚC</div>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {Array.from({ length: 12 }).map((_, i) => <div key={i} className="h-20 rounded-[12px] border border-border-2 bg-surface" />)}
+              <div className="col-span-2 row-span-2 -mt-[184px] ml-[94px] hidden h-[168px] rounded-[16px] border border-border bg-surface-3 md:block" />
+            </div>
+            <div className="mt-4 text-center text-[14px] text-text-3">Nhập thông tin để lập lá số</div>
+          </div>
         </div>
-      )}
+      </section>
+
+      <BottomSheet open={openProvince} title="Chọn Tỉnh / Thành" onClose={() => setOpenProvince(false)}>
+        <input value={query} onChange={(e) => setQuery(e.target.value)} className="sticky top-0 mb-3 w-full rounded-[12px] border border-border bg-surface-2 px-[14px] py-[10px] text-[14px] text-text outline-none" placeholder="Tìm tỉnh thành..." />
+        <div>
+          {provinces.map((item) => {
+            const active = province === item.name;
+            return (
+              <button key={item.name} onClick={() => { setProvince(item.name); setOpenProvince(false); }} className={`flex w-full items-center justify-between border-b border-border-2 px-5 py-3 text-left text-[15px] ${active ? 'bg-tuvi-bg text-gold font-semibold' : 'text-text'}`}>
+                <span>{item.name}</span>
+                <span>{active ? '✓' : ''}</span>
+              </button>
+            );
+          })}
+          {!provinces.length && <div className="px-5 py-4 text-[14px] text-text-2">Không tìm thấy “{query}”</div>}
+        </div>
+      </BottomSheet>
     </main>
   );
 }

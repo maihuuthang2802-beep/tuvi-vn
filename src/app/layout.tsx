@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Be_Vietnam_Pro, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-body",
+const bodyFont = Be_Vietnam_Pro({
+  variable: "--font-ui",
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-heading",
+const displayFont = Cormorant_Garamond({
+  variable: "--font-display",
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
   title: "TuVi.vn - Tử Vi, Kinh Dịch, Xin Xăm, Tarot",
-  description: "Nền tảng huyền học Việt hóa với Tử Vi, Kinh Dịch, Xin Xăm, Tarot, AI luận giải, tài khoản và gói dịch vụ.",
+  description: "TuVi.vn — Tử Vi, Kinh Dịch, Tarot, Xin Xăm, AI luận giải và dữ liệu Việt hóa chuẩn.",
 };
 
 export default function RootLayout({
@@ -23,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="vi" className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }
