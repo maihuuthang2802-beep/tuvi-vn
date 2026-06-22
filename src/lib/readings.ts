@@ -1,3 +1,7 @@
+import { castIChing } from '@/lib/iching/engine';
+import { generateChart } from '@/lib/ziwei/algorithm';
+import { BRANCH_VI, PALACE_VI, STEM_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
+
 export type ServiceKey = 'tu-vi' | 'kinh-dich' | 'xin-xam' | 'tarot';
 
 export interface ReadingInput {
@@ -7,6 +11,9 @@ export interface ReadingInput {
   birthDate?: string;
   birthTime?: string;
   gender?: 'male' | 'female' | 'other';
+  province?: string;
+  city?: string;
+  longitude?: number;
 }
 
 export interface ReadingResult {
@@ -16,11 +23,6 @@ export interface ReadingResult {
   advice: string;
 }
 
-const stems = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
-const branches = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
-const palaces = ['Mệnh', 'Phụ mẫu', 'Phúc đức', 'Điền trạch', 'Quan lộc', 'Nô bộc', 'Thiên di', 'Tật ách', 'Tài bạch', 'Tử tức', 'Phu thê', 'Huynh đệ'];
-const stars = ['Tử Vi', 'Thiên Cơ', 'Thái Dương', 'Vũ Khúc', 'Thiên Đồng', 'Liêm Trinh', 'Thiên Phủ', 'Thái Âm', 'Tham Lang', 'Cự Môn', 'Thiên Tướng', 'Thiên Lương', 'Thất Sát', 'Phá Quân'];
-const hexagrams = ['Thuần Càn', 'Thuần Khôn', 'Thủy Lôi Truân', 'Sơn Thủy Mông', 'Thủy Thiên Nhu', 'Thiên Thủy Tụng', 'Địa Thủy Sư', 'Thủy Địa Tỷ'];
 const lots = ['Thượng thượng', 'Thượng', 'Trung bình', 'Trung', 'Hạ nhưng chuyển được'];
 const tarot = ['Kẻ Khờ', 'Nhà Ảo Thuật', 'Nữ Tư Tế', 'Hoàng Hậu', 'Hoàng Đế', 'Tình Nhân', 'Chiến Xa', 'Ẩn Sĩ', 'Bánh Xe Số Phận', 'Công Lý', 'Ngôi Sao', 'Mặt Trời'];
 
@@ -37,30 +39,64 @@ function pick<T>(items: T[], seed: number, offset = 0) {
   return items[(seed + offset) % items.length];
 }
 
+function trueSolarBranch(birthTime: string | undefined, longitude = 105.85) {
+  const [hourText, minuteText] = (birthTime || '08:00').split(':');
+  const clockMinutes = (Number(hourText) || 0) * 60 + (Number(minuteText) || 0);
+  const solarMinutes = ((clockMinutes + (longitude - 105) * 4) % 1440 + 1440) % 1440;
+  if (solarMinutes >= 1380 || solarMinutes < 60) return 0;
+  return Math.floor((solarMinutes - 60) / 120) + 1;
+}
+
 export function createReading(input: ReadingInput): ReadingResult {
   const seed = hash(JSON.stringify(input));
   const question = input.question?.trim() || 'Tổng quan hiện tại';
 
   if (input.service === 'tu-vi') {
-    const year = input.birthDate ? new Date(input.birthDate).getFullYear() : new Date().getFullYear();
-    const canChi = `${pick(stems, year)} ${pick(branches, year)}`;
-    const palace = pick(palaces, seed);
-    const mainStar = pick(stars, seed, 3);
+    const birthDate = input.birthDate ? new Date(input.birthDate) : new Date('1995-01-01');
+    const longitude = typeof input.longitude === 'number' ? input.longitude : 105.85;
+    const chart = generateChart({
+      year: birthDate.getFullYear(),
+      month: birthDate.getMonth() + 1,
+      day: birthDate.getDate(),
+      hour: trueSolarBranch(input.birthTime, longitude),
+      gender: input.gender === 'female' ? 'female' : 'male',
+      name: input.name,
+      province: input.province,
+      city: input.city,
+      longitude,
+    });
+    const ming = chart.palaces.find(palace => palace.isMingGong);
+    const currentDaXian = chart.daXians[chart.currentDaXianIndex];
+    const mainStars = ming?.stars.filter(star => star.type === 'major').map(star => star.name) || [];
+    const borrowedStars = ming?.borrowedStars?.length ? `, mượn chính tinh đối cung: ${viStars(ming.borrowedStars)}` : '';
+    const canChi = `${STEM_VI[chart.lunarInfo.yearStem]} ${BRANCH_VI[chart.lunarInfo.yearBranch]}`;
+    const mingName = ming ? viPalace(ming.name) : 'Mệnh';
+
     return {
       title: `Lá số Tử Vi: ${input.name || 'Đương số'}`,
-      summary: `${canChi}, trọng tâm nằm tại cung ${palace}, chính tinh nổi bật là ${mainStar}.`,
-      details: [`Cung ${palace} cho thấy trục quyết định giai đoạn này.`, `${mainStar} nhấn mạnh cách hành động, tham vọng và bài học cá nhân.`, 'Bản MVP đang dùng luận giải rule-based; có thể nối AI/RAG ở API để sinh diễn giải sâu.'],
-      advice: 'Ưu tiên chọn một mục tiêu chính, theo dõi 90 ngày, tránh đổi hướng vì cảm xúc ngắn hạn.',
+      summary: `${canChi}, âm lịch ${chart.lunarInfo.lunarDay}/${chart.lunarInfo.lunarMonth}/${chart.lunarInfo.lunarYear}, ${viWuxingJu(chart.wuxingJuName)}. Cung ${mingName} tại ${BRANCH_VI[chart.mingGongBranch]}.`,
+      details: [
+        `Chính tinh cung Mệnh: ${mainStars.length ? viStars(mainStars) : 'Vô chính diệu'}${borrowedStars}.`,
+        `Nơi sinh: ${input.city || 'Hà Nội'}${input.province ? `, ${input.province}` : ''}; kinh độ ${longitude.toFixed(2)}°Đ, dùng để hiệu chỉnh giờ mặt trời thật Việt Nam.`,
+        `Thân cư tại chi ${BRANCH_VI[chart.shenGongBranch]}; tuổi hiện tại: ${chart.currentAge}.`,
+        currentDaXian ? `Đại hạn hiện tại: ${currentDaXian.startAge}-${currentDaXian.endAge} tại cung ${PALACE_VI[currentDaXian.palaceName] || currentDaXian.palaceName}.` : 'Chưa xác định đại hạn hiện tại.',
+      ],
+      advice: 'Dùng lá số thật làm dữ liệu nền; tầng AI/RAG tiếp theo sẽ diễn giải sâu theo từng cung, tam phương tứ chính và đại hạn.',
     };
   }
 
   if (input.service === 'kinh-dich') {
-    const hexagram = pick(hexagrams, seed);
+    const reading = castIChing(question);
     return {
-      title: `Quẻ Kinh Dịch: ${hexagram}`,
-      summary: `Câu hỏi: ${question}. Quẻ chủ ${hexagram} báo thời vận cần xét thế, thời và người đồng hành.`,
-      details: ['Quẻ chủ mô tả hoàn cảnh hiện tại.', 'Hào động dùng để tìm điểm cần đổi trước.', 'Kết quả tốt khi hành động thuận thời, không cưỡng cầu.'],
-      advice: 'Hỏi lại bằng câu cụ thể hơn nếu cần chọn giữa hai phương án.',
+      title: `Quẻ Kinh Dịch: ${reading.hexagram.name}`,
+      summary: reading.summary,
+      details: [
+        `Quẻ chủ: ${reading.hexagram.name} (${reading.hexagram.han}) — ${reading.hexagram.judgment}`,
+        `Hình ảnh: ${reading.hexagram.image}`,
+        ...reading.lines.map(line => `Hào ${line.position}: ${line.yinYang}${line.moving ? ' (động)' : ''} — ${line.text}`),
+        reading.changedHexagram ? `Quẻ biến: ${reading.changedHexagram.name} (${reading.changedHexagram.han}) — ${reading.changedHexagram.judgment}` : null,
+      ].filter(Boolean) as string[],
+      advice: reading.advice,
     };
   }
 

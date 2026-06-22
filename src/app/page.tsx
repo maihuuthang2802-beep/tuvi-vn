@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import type { ReadingResult, ServiceKey } from '@/lib/readings';
+import { PROVINCES } from '@/lib/ziwei/cities';
 
 const services: Array<{ key: ServiceKey; title: string; subtitle: string; cta: string }> = [
   { key: 'tu-vi', title: 'Lá số Tử Vi', subtitle: 'Lập lá số, xem cung trọng tâm, đại hạn, luận giải AI.', cta: 'Lập lá số' },
@@ -20,10 +21,14 @@ export default function Home() {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('1995-01-01');
   const [birthTime, setBirthTime] = useState('08:00');
+  const [province, setProvince] = useState('Hà Nội');
+  const [city, setCity] = useState('Hà Nội');
   const [question, setQuestion] = useState('Tôi nên tập trung điều gì trong tháng tới?');
   const [result, setResult] = useState<ReadingResult | null>(null);
   const [loading, setLoading] = useState(false);
   const active = useMemo(() => services.find(item => item.key === service)!, [service]);
+  const cityList = useMemo(() => PROVINCES.find(item => item.name === province)?.cities || [], [province]);
+  const longitude = cityList.find(item => item.name === city)?.longitude ?? 105.85;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +36,7 @@ export default function Home() {
     const response = await fetch('/api/reading', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ service, name, birthDate, birthTime, question }),
+      body: JSON.stringify({ service, name, birthDate, birthTime, question, province, city, longitude }),
     });
     const data = await response.json();
     setResult(data.result);
@@ -110,6 +115,16 @@ export default function Home() {
                 </label>
                 <label className="block text-sm font-medium">Giờ sinh
                   <input type="time" value={birthTime} onChange={event => setBirthTime(event.target.value)} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none" />
+                </label>
+                <label className="block text-sm font-medium">Tỉnh/thành
+                  <select value={province} onChange={event => { const nextProvince = event.target.value; const nextCity = PROVINCES.find(item => item.name === nextProvince)?.cities[0]?.name || ''; setProvince(nextProvince); setCity(nextCity); }} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none">
+                    {PROVINCES.map(item => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm font-medium">Thành phố/quận
+                  <select value={city} onChange={event => setCity(event.target.value)} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none">
+                    {cityList.map(item => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
                 </label>
               </div>
             )}

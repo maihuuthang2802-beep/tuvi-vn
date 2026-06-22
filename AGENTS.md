@@ -3,3 +3,66 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# Project: tuvi-vn
+
+Vietnamese spiritual services MVP for Vercel deployment.
+
+## Product scope
+- Frontend landing/app for 4 services: Lá số Tử Vi, Quẻ Kinh Dịch, Xin Xăm, Tarot.
+- API routes prepared for AI reading, auth, checkout, and history.
+- Tử Vi engine is ported from `D:\tuvi\ziwei-doushu` and exposed through `/api/reading`.
+- Kinh Dịch engine is a custom 64-guai + moving line system based on the King Wen classic.
+- Xin Xăm and Tarot remain MVP/rule-based until expanded.
+
+## Stack
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Vercel target
+
+## Main files
+- `src/app/page.tsx`: main UI, service selector, form, pricing, result panel.
+- `src/lib/readings.ts`: reading orchestrator; Tử Vi/Kinh Dịch use real engines; Xin Xăm/Tarot use MVP rules.
+- `src/lib/ziwei/algorithm.ts`: real Tử Vi chart generation via `iztro`.
+- `src/lib/ziwei/cities.ts`: Vietnam provinces/cities and longitude data for true solar time.
+- `src/lib/ziwei/vietnamese.ts`: Vietnamese labels for palaces, stars, branches, tứ hóa, ngũ hành cục.
+- `src/lib/iching/engine.ts`: custom 64-guai I Ching engine with King Wen ordering, 3-coin casting, moving lines, hexagram lookup, and Vietnamese translations.
+- `src/app/api/reading/route.ts`: reading API, returns local mode unless `AI_API_KEY` exists.
+- `src/app/api/auth/route.ts`: mock email login.
+- `src/app/api/checkout/route.ts`: mock checkout for starter/pro plans.
+- `src/app/api/history/route.ts`: mock reading history.
+
+## Env
+- `AI_API_KEY`: future LLM provider key.
+- `PAYMENT_PROVIDER`: default `mock`; future Stripe/PayOS/Momo.
+- `DATABASE_URL`: future database for users/history.
+
+## Commands
+- `npm run dev`: local dev.
+- `npm run lint`: ESLint.
+- `npm run build`: production build/type check.
+
+## Localization rules
+- All user-facing text must be Vietnamese.
+- Keep Chinese star/palace keys only inside engine internals if `iztro` requires them.
+- Always convert user-facing palaces/stars/tứ hóa through `src/lib/ziwei/vietnamese.ts`.
+- Location data must be Vietnam-only; use `src/lib/ziwei/cities.ts`.
+- I Ching hexagrams are fully translated into Vietnamese with original Chinese characters preserved for reference.
+
+## Current limitations / TODO
+- Kinh Dịch has full line judgments (tóm lược); add full line-by-line translations from original text later.
+- Xin Xăm uses sample lot categories; expand to full xăm dataset with 100+ lots.
+- Tarot uses sample major arcana cards; expand to full 78-card deck with detailed meanings.
+- Auth/payment/history are mocks; replace with real providers (NextAuth, PayOS/Stripe, Vercel Postgres).
+- No persistent database yet; add Vercel Postgres or Supabase for user data and reading history.
+- No LLM integration yet; connect AI provider (OpenAI/Claude/Gemini) for deep reading interpretation.
+- Tử Vi patterns (cách cục) engine exists but not wired to API output yet.
+- Add PDF report generation for readings.
+- Add social sharing (OG image per chart/reading).
+- Mobile-optimized chart board visualization (currently text-only).
+
+## Git/deploy
+- GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`
+- Production deploy expected through Vercel Git integration on `main` branch.
