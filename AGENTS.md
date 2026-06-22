@@ -48,7 +48,7 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - `npm run lint`: ESLint.
 - `npm run build`: production build/type check.
 
-## Localization rules
+## Localization rules 
 - All user-facing text must be Vietnamese.
 - Keep Chinese star/palace keys only inside engine internals if `iztro` requires them.
 - Always convert user-facing palaces/stars/tứ hóa through `src/lib/ziwei/vietnamese.ts`.
