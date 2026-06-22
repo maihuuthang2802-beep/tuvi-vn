@@ -23,24 +23,11 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Vercel target
 
 ## Main files
-- `src/app/(app)/page.tsx`: homepage per `tuvi-ui-spec.md` — hero, 4 signature module cards, today strip, AI promo, quick chips.
-- `src/app/(app)/tu-vi/page.tsx`: Tử Vi form page — submit to result page, giờ sinh chips, searchable province/city picker, longitude display.
-- `src/app/(app)/kinh-dich/page.tsx`: Kinh Dịch module page — 3 modes (Lục Hào / Thiên Ý / Mai Hoa), 6-flip UI, submit to result page.
-- `src/app/(app)/xin-xam/page.tsx`: Xin Xăm module page — theme cards, shake preview, submit to result page, AI CTA.
-- `src/app/(app)/tarot/page.tsx`: Tarot module page — spread picker, question textarea, reveal preview, submit to result page, AI CTA.
-- `src/app/(app)/goi-dich-vu/page.tsx`: pricing/paywall page for AI flow.
-- `src/app/(app)/ket-qua/[slug]/page.tsx`: result pages for Tử Vi / Kinh Dịch / Xin Xăm / Tarot.
-- `src/app/(app)/layout.tsx`: shared app shell with header, footer, mobile bottom nav.
-- `src/components/layout/Header.tsx`: sticky blurred header.
-- `src/components/layout/BottomNav.tsx`: fixed mobile bottom nav with elevated center AI button.
-- `src/components/layout/Footer.tsx`: footer + disclaimer.
-- `src/components/layout/BottomSheet.tsx`: reusable bottom sheet picker.
-- `src/components/home/ModuleCards.tsx`: 4-card signature home grid.
-- `src/components/home/TodayStrip.tsx`: “Hôm Nay” strip.
-- `src/components/home/AIPromoCard.tsx`: AI promo card.
-- `src/components/home/QuickChips.tsx`: horizontally scrollable quick actions.
-- `src/components/shared/ModuleHero.tsx`: shared small hero for module pages.
-- `src/components/shared/GlowCard.tsx`: reusable glow card shell.
+- `src/app/page.tsx`: landing page with 4 service cards (Tử Vi, Kinh Dịch, Xin Xăm, Tarot).
+- `src/app/tu-vi/page.tsx`: Tử Vi page — 3-column layout: left sidebar (form + palace list), center (4×4 chart grid), right sidebar (star details + interpretation).
+- `src/app/kinh-dich/page.tsx`: Kinh Dịch page — 3-tab switcher: Lục Hào (coin casting animation), Thiên Ý (intent-based), Mai Hoa (time-based). Hexagram rendering with line-by-line display.
+- `src/app/xin-xam/page.tsx`: Xin Xăm page — bamboo tube shake animation, random lot draw, expandable poem + 4-category interpretation (tài lộc, tình duyên, gia đạo, sức khỏe).
+- `src/app/tarot/page.tsx`: Tarot page — 1 or 3 card spread, 3D flip animation, upright/reversed meanings.
 - `src/lib/readings.ts`: reading orchestrator; Tử Vi/Kinh Dịch use real engines; Xin Xăm/Tarot use MVP rules.
 - `src/lib/ziwei/algorithm.ts`: real Tử Vi chart generation via `iztro`.
 - `src/lib/ziwei/cities.ts`: Vietnam provinces/cities and longitude data for true solar time.
@@ -52,7 +39,7 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - `src/app/api/history/route.ts`: mock reading history.
 
 ## Env
-- `AI_API_KEY`: future LLM provider key.
+- `OPENAI_API_KEY`: OpenAI API key for deep reading AI interpretation (gpt-4-turbo). If not set, AI endpoint returns mock message.
 - `PAYMENT_PROVIDER`: default `mock`; future Stripe/PayOS/Momo.
 - `DATABASE_URL`: future database for users/history.
 
@@ -70,7 +57,7 @@ Vietnamese spiritual services MVP for Vercel deployment.
 
 ## Design system
 - Active spec source: `C:\Users\Mrwin\Downloads\tuvi-ui-spec.md`.
-- Theme: “Đêm Thiêng” — dark mystical, temple gold, subtle glow.
+- Theme: "Đêm Thiêng" — dark mystical, temple gold, subtle glow.
 - Core colors: `#0D0B19` bg, `#181530` surface, `#221E3E` surface-2, `#C9A96E` gold, `#EDE7D3` text.
 - Module colors: Tử Vi = gold, Kinh Dịch = green jade, Xin Xăm = vermilion red, Tarot = mystical purple, AI = cyan.
 - Fonts: `Cormorant Garamond` for display + `Be Vietnam Pro` for UI.
@@ -78,25 +65,87 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Interactive animations: coin flip, tube shake, card flip 3D, glow pulse, page-enter fade.
 
 ## Current limitations / TODO
-- Tử Vi result page now renders real `generateChart()` data, summary, Đại Hạn, Tứ Hóa, and palace grid; next step is richer tab interaction and deeper pattern output.
-- Premium gating is now wired from result pages to `/goi-dich-vu` and mock checkout returns to result page with unlocked state; next step is replacing query-string mock state with real entitlement/auth/payment state.
-- Kinh Dịch now supports Lục Hào, Mai Hoa, and Thiên Ý with method-aware derivation in `src/lib/iching/engine.ts`; next step is deeper interpretation quality and, if needed, stricter classical Mai Hoa rules.
-- Tarot now supports full 78-card deck with major/minor arcana and upright/reversed meanings from `drawTarotCards()` in `src/lib/readings.ts`; next step is card images and richer per-card meaning dataset.
-- Tarot card images: currently text-only; add Rider-Waite card images.
-- Xin Xăm still uses mock lots; expand to full xăm dataset with 100+ lots, Hán/Nôm text, dịch nghĩa, and phẩm cấp.
-- Auth/payment/history are mocks; replace with real providers (NextAuth, PayOS/Stripe, Vercel Postgres).
-- No persistent database yet; add Vercel Postgres or Supabase for user data and reading history.
-- No LLM integration yet; connect AI provider (OpenAI/Claude/Gemini) for deep reading interpretation.
-- Add PDF report generation for readings.
-- Add social sharing (OG image per chart/reading).
-
-## Recent session progress
 - Phase 1 done: premium gating flow across `src/app/(app)/ket-qua/[slug]/page.tsx`, `src/app/(app)/goi-dich-vu/page.tsx`, and `src/app/api/checkout/route.ts`.
 - Phase 2 done: Kinh Dịch form/result now pass `method`, `objectName`, `datetime`; engine returns method detail, quẻ chủ/quẻ biến, hào động, and six-line summaries.
 - Phase 3 done: Tarot form/result now support spread `1` or `3`; result page renders deterministic 78-card draws with reversed state.
+- Phase 4 done: Xin Xăm dataset expanded to 96 lots with Hán/Nôm, dịch nghĩa, phẩm cấp (tương/bất/liêu/cải); deterministic seed-based draw.
+- Phase 6 done: LLM integration via OpenAI API; `/api/ai/interpret` endpoint; result pages have AI Luận Giải tab (client-side fetch via `useAIInterpretation` hook).
+- Phase 7 done: PDF report generation via pdfkit; `/api/pdf/generate` endpoint; result pages have "PDF Report" download button.
 - Verification baseline for these phases: `npm run lint` and `npm run build` both passed after each phase.
-- Recommended next implementation phase: Xin Xăm dataset expansion, then real auth/payment/history + database.
+
+**Remaining phases:**
+- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres) — postponed.
+- Phase 9: Tử Vi deeper output — richer tab interaction, pattern detection (cách cục), deeper star meanings.
+- Phase 10: Tarot card images — Rider-Waite 78-card PNG set, per-card image render.
+
+Recommended next: Phase 9 (Tử Vi richness) or Phase 10 (Tarot UX polish).
 
 ## Git/deploy
 - GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`
 - Production deploy expected through Vercel Git integration on `main` branch.
+
+## LLM Integration (Phase 6)
+
+**Setup:**
+- Install OpenAI SDK: `npm install openai @types/openai`
+- Set env var: `OPENAI_API_KEY=sk-...`
+- Model: `gpt-4-turbo` (configurable in `src/lib/ai/client.ts`)
+
+**How it works:**
+1. Result page renders tab switcher: "Chi tiết" ↔ "AI Luận Giải"
+2. Clicking "AI Luận Giải" triggers `useAIInterpretation()` hook (client-side)
+3. Hook fetches POST `/api/ai/interpret` with service + reading + question
+4. Server calls OpenAI with service-specific system prompt (`src/lib/ai/prompts.ts`)
+5. Returns interpretation text; displays in tab
+6. Fallback: if `OPENAI_API_KEY` not set, shows mock message
+
+**Prompts per service:**
+- Tử Vi: Focus on Ming Palace, Da Xian, Si Hua, practical life guidance
+- Kinh Dịch: Focus on hexagram philosophy, yin/yang, actionable wisdom
+- Xin Xăm: Focus on lot category meaning, spiritual insight, compassion
+- Tarot: Focus on card arcana, narrative arc, psychological insight
+
+**Files:**
+- `src/lib/ai/client.ts`: OpenAI client + `interpretReading()` function
+- `src/lib/ai/prompts.ts`: `getSystemPrompt()` + `getUserPrompt()` per service
+- `src/app/api/ai/interpret/route.ts`: POST endpoint
+- `src/hooks/useAIInterpretation.ts`: client hook (must be `'use client'`)
+- `src/components/result/BasicResultClient.tsx`: tab UI + hook usage
+
+**Notes:**
+- AI tab only on kinh-dịch/xin-xăm/tarot (not Tử Vi; would need server-side refactor)
+- Currently returns gpt-4-turbo; can swap to Claude/Gemini by changing provider
+- No streaming; waits for full response (UX: "Đang tạo luận giải...")
+- No caching; every tab click re-fetches (future: add Redis cache)
+
+## PDF Generation (Phase 7)
+
+**Setup:**
+- Install pdfkit: `npm install pdfkit @types/pdfkit`
+
+**How it works:**
+1. Result page has "PDF Report" button (all 4 services)
+2. Clicking button calls `downloadPDF(service, reading, question, metadata)`
+3. Fetches POST `/api/pdf/generate` with reading data
+4. Server generates PDF using pdfkit; returns file
+5. Browser auto-downloads as `{service}-{timestamp}.pdf`
+
+**PDF contents:**
+- Title + creation date (gold header)
+- Summary (reading.summary)
+- Question (if provided)
+- Details (reading.details joined with newlines)
+- Advice (reading.advice)
+- Metadata (optional; footer section)
+
+**Files:**
+- `src/lib/pdf/generator.ts`: `generatePDFStream()` function; returns Buffer
+- `src/app/api/pdf/generate/route.ts`: POST endpoint
+- `src/lib/pdf.ts`: `downloadPDF()` helper (client-side, fetches + triggers download)
+- `src/components/result/BasicResultClient.tsx`: "PDF Report" button + download state
+- Tử Vi result page: placeholder button (disabled; server component)
+
+**Notes:**
+- Tử Vi: currently disabled (server-side render; would need client refactor for button interactivity)
+- No images in PDF yet (future: add chart diagrams via canvas → image)
+- Filename: `{service}-{Date.now()}.pdf` (e.g. `kinh-dich-1719123456789.pdf`)

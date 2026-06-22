@@ -4,16 +4,21 @@ import Link from 'next/link';
 import ModuleHero from '@/components/shared/ModuleHero';
 import { useState } from 'react';
 
-const themes = ['Tài Lộc', 'Tình Duyên', 'Gia Đạo', 'Sức Khỏe'];
+const themes = [
+  { name: 'Tài Lộc', icon: '💰', desc: 'Vận may kinh tế' },
+  { name: 'Tình Duyên', icon: '💕', desc: 'Nhân duyên tình cảm' },
+  { name: 'Gia Đạo', icon: '🏠', desc: 'Gia đình hòa thuận' },
+  { name: 'Sức Khỏe', icon: '💪', desc: 'Sức khỏe an khang' },
+];
 
 export default function XinXamPage() {
-  const [active, setActive] = useState(themes[0]);
+  const [active, setActive] = useState(themes[0].name);
   const [drawn, setDrawn] = useState(false);
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon="❀" title="Xin Xăm Thánh Mẫu" subtitle="Cầu tài · Tình duyên · Gia đạo" accent="var(--color-xam)" />
-      <section className="mx-5 mt-5 grid grid-cols-2 gap-3 md:mx-auto md:max-w-[1100px] md:max-w-[480px]">
-        {themes.map((theme) => <button key={theme} onClick={() => setActive(theme)} className={`rounded-[20px] border p-5 text-center ${active === theme ? 'border-xam bg-xam-bg text-xam' : 'border-border bg-surface text-text-2'}`}><div className="text-[20px]">✦</div><div className="mt-2 text-[14px] font-semibold">{theme}</div></button>)}
+      <section className="mx-5 mt-5 grid grid-cols-2 gap-3 md:mx-auto md:max-w-[480px]">
+        {themes.map((theme) => <button key={theme.name} onClick={() => setActive(theme.name)} className={`rounded-[20px] border p-5 text-center transition-all ${active === theme.name ? 'border-xam bg-xam-bg text-xam' : 'border-border bg-surface text-text-2 hover:border-xam/50'}`}><div className="text-[24px]">{theme.icon}</div><div className="mt-2 text-[14px] font-semibold">{theme.name}</div><div className="mt-1 text-[11px] opacity-75">{theme.desc}</div></button>)}
       </section>
       <form action="/ket-qua/xin-xam" className="mx-5 mt-5 rounded-[20px] border border-border bg-surface p-5 text-center md:mx-auto md:max-w-[480px]">
         <input type="hidden" name="question" value={active} />

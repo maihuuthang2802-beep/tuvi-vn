@@ -1,6 +1,7 @@
 import { castIChing } from '@/lib/iching/engine';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import { BRANCH_VI, PALACE_VI, STEM_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
+import { getXiXamLot, CATEGORY_VI, CATEGORY_MEANINGS } from '@/lib/xixam/lots';
 
 export type ServiceKey = 'tu-vi' | 'kinh-dich' | 'xin-xam' | 'tarot';
 
@@ -27,7 +28,7 @@ export interface ReadingResult {
   advice: string;
 }
 
-const lots = ['Thượng thượng', 'Thượng', 'Trung bình', 'Trung', 'Hạ nhưng chuyển được'];
+
 
 const MAJOR_ARCANA = [
   'Kẻ Khờ', 'Nhà Ảo Thuật', 'Nữ Tư Tế', 'Hoàng Hậu', 'Hoàng Đế', 'Giáo Hoàng', 'Tình Nhân', 'Chiến Xa', 'Sức Mạnh', 'Ẩn Sĩ', 'Bánh Xe Số Phận', 'Công Lý', 'Người Treo Ngược', 'Cái Chết', 'Tiết Độ', 'Quỷ Dữ', 'Tòa Tháp', 'Ngôi Sao', 'Mặt Trăng', 'Mặt Trời', 'Phán Xét', 'Thế Giới',
@@ -105,10 +106,6 @@ function hash(value: string) {
   return h >>> 0;
 }
 
-function pick<T>(items: T[], seed: number, offset = 0) {
-  return items[(seed + offset) % items.length];
-}
-
 function trueSolarBranch(birthTime: string | undefined, longitude = 105.85) {
   const [hourText, minuteText] = (birthTime || '08:00').split(':');
   const clockMinutes = (Number(hourText) || 0) * 60 + (Number(minuteText) || 0);
@@ -172,12 +169,16 @@ export function createReading(input: ReadingInput): ReadingResult {
   }
 
   if (input.service === 'xin-xam') {
-    const lot = pick(lots, seed);
+    const lot = getXiXamLot(seed);
     return {
-      title: `Xin xăm: ${lot}`,
-      summary: `Xăm ${lot} cho câu hỏi: ${question}.`,
-      details: ['Việc có tín hiệu nhưng cần đúng người hỗ trợ.', 'Tài lộc đến chậm, không hợp đầu cơ.', 'Tình cảm nên rõ lời, tránh tự suy diễn.'],
-      advice: 'Làm việc nhỏ chắc tay trong 7 ngày tới rồi mới quyết việc lớn.',
+      title: `Xin xăm: ${lot.name}`,
+      summary: `${lot.han} — ${lot.meaning}`,
+      details: [
+        `Phẩm cấp: ${CATEGORY_VI[lot.category]} (${CATEGORY_MEANINGS[lot.category]})`,
+        `Câu hỏi: ${question}`,
+        `Xăm số ${lot.id}: ${lot.name} — một dự báo từ truyền thống, nên xem như gợi ý để suy ngẫm.`,
+      ],
+      advice: lot.category === 'cải' ? 'Xăm xấu nhưng có cơ hội chuyển tốt; cần nỗ lực cải thiện.' : lot.category === 'liêu' ? 'Cần cẩn thận và tìm cách vượt qua khó khăn sắp tới.' : lot.category === 'tương' ? 'May mắn đang ở cạnh bạn, hãy nắm bắt cơ hội.' : 'Mọi sự vừa phải, cần kiên nhẫn để tìm cách tốt nhất.',
     };
   }
 
