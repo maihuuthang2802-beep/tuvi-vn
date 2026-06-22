@@ -1,45 +1,42 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import type { BirthInfo, ZiweiChart, Palace } from '@/lib/ziwei/types';
 import { BRANCH_VI, STEM_VI, viPalace, viStar, viSiHua, viWuxingJu } from '@/lib/ziwei/vietnamese';
 import { PROVINCES } from '@/lib/ziwei/cities';
+import WheelPicker from '@/components/WheelPicker';
+
+const YEARS = Array.from({ length: 80 }, (_, i) => ({ value: String(i + 1945), label: String(i + 1945) }));
+const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Tháng ${i + 1}` }));
+const DAYS = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const HOURS = Array.from({ length: 12 }, (_, i) => ({ value: String(i), label: `Giờ ${['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'][i]}`}));
 
 export default function TuViPage() {
   const [chart, setChart] = useState<ZiweiChart | null>(null);
   const [selectedPalace, setSelectedPalace] = useState<Palace | null>(null);
   const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState('1995-01-01');
-  const [birthTime, setBirthTime] = useState('08:00');
+  const [birthYear, setBirthYear] = useState('1995');
+  const [birthMonth, setBirthMonth] = useState('1');
+  const [birthDay, setBirthDay] = useState('1');
+  const [birthHour, setBirthHour] = useState('0');
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [province, setProvince] = useState('Hà Nội');
   const [city, setCity] = useState('Hà Nội');
   const cityList = useMemo(() => PROVINCES.find(p => p.name === province)?.cities || [], [province]);
   const longitude = cityList.find(c => c.name === city)?.longitude ?? 105.85;
-  const [solarTime, setSolarTime] = useState(false);
-  const [lunarDate, setLunarDate] = useState(false);
+
 
   const trueSolarBranch = useCallback(() => {
-    if (!solarTime) {
-      const [h] = (birthTime || '08:00').split(':');
-      return Math.floor((Number(h) + 1) / 2) % 12;
-    }
-    const [hourText, minuteText] = (birthTime || '08:00').split(':');
-    const clockMinutes = (Number(hourText) || 0) * 60 + (Number(minuteText) || 0);
-    const solarMinutes = ((clockMinutes + (longitude - 105) * 4) % 1440 + 1440) % 1440;
-    if (solarMinutes >= 1380 || solarMinutes < 60) return 0;
-    return Math.floor((solarMinutes - 60) / 120) + 1;
-  }, [birthTime, longitude, solarTime]);
+    return Number(birthHour);
+  }, [birthHour]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const date = birthDate ? new Date(birthDate) : new Date('1995-01-01');
     const info: BirthInfo = {
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-      day: date.getDate(),
+      year: Number(birthYear),
+      month: Number(birthMonth),
+      day: Number(birthDay),
       hour: trueSolarBranch(),
       gender,
       name: name || undefined,
@@ -54,45 +51,32 @@ export default function TuViPage() {
 
   return (
     <main className="min-h-screen bg-bg text-text" style={{ fontFamily: 'var(--font-body)' }}>
-      {/* nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <Link href="/" className="text-gold text-lg font-bold tracking-[0.35em]" style={{ fontFamily: 'var(--font-heading)' }}>TUVI.VN</Link>
-        <div className="flex gap-4 text-sm text-muted">
-          <Link href="/tu-vi" className="text-gold">Tử Vi</Link>
-        </div>
-      </nav>
 
       {!chart ? (
-        <div className="mx-auto max-w-lg px-4 py-20">
-          <h1 className="text-center text-3xl md:text-4xl text-gold mb-3" style={{ fontFamily: 'var(--font-heading)' }}>Lập Lá Số Tử Vi</h1>
-          <p className="text-center text-sm text-muted mb-10">Dựa trên engine Tử Vi và dữ liệu tỉnh thành Việt Nam</p>
+        <div className="mx-auto max-w-lg px-4 py-8">
+          <h1 className="text-center text-3xl text-gold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>Lập Lá Số Tử Vi</h1>
+          <p className="text-center text-sm text-muted mb-6">Engine Tử Vi chuẩn · Dữ liệu tỉnh thành Việt Nam</p>
           <form onSubmit={handleSubmit} className="space-y-5">
             <label className="block text-sm font-medium text-muted">Họ tên</label>
             <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none" placeholder="Nguyễn Văn A" />
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-muted">Ngày sinh</label>
-                <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none" />
+            <div>
+              <label className="block text-sm font-medium text-muted mb-2">Ngày sinh</label>
+              <div className="flex justify-center gap-2" style={{ height: 132 }}>
+                <WheelPicker options={DAYS} value={birthDay} onChange={setBirthDay} />
+                <WheelPicker options={MONTHS} value={birthMonth} onChange={setBirthMonth} />
+                <WheelPicker options={YEARS} value={birthYear} onChange={setBirthYear} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-muted">Giờ sinh</label>
-                <input type="time" value={birthTime} onChange={e => setBirthTime(e.target.value)} className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-muted mb-2">Giờ sinh</label>
+              <div className="flex justify-center gap-2" style={{ height: 132 }}>
+                <WheelPicker options={HOURS} value={birthHour} onChange={setBirthHour} />
               </div>
             </div>
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-muted">Giới tính</label>
               <button type="button" onClick={() => setGender('male')} className={`px-4 py-2 rounded-full text-sm border ${gender === 'male' ? 'border-gold text-gold bg-gold-soft' : 'border-border text-muted'}`}>Nam</button>
               <button type="button" onClick={() => setGender('female')} className={`px-4 py-2 rounded-full text-sm border ${gender === 'female' ? 'border-gold text-gold bg-gold-soft' : 'border-border text-muted'}`}>Nữ</button>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={solarTime} onChange={e => setSolarTime(e.target.checked)} className="accent-gold" />
-                Chân thái dương giờ
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={lunarDate} onChange={e => setLunarDate(e.target.checked)} className="accent-gold" />
-                Dùng ngày âm lịch
-              </label>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
