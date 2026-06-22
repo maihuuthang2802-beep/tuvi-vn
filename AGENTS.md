@@ -71,14 +71,15 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Phase 4 done: Xin Xăm dataset expanded to 96 lots with Hán/Nôm, dịch nghĩa, phẩm cấp (tương/bất/liêu/cải); deterministic seed-based draw.
 - Phase 6 done: LLM integration via OpenAI API; `/api/ai/interpret` endpoint; result pages have AI Luận Giải tab (client-side fetch via `useAIInterpretation` hook).
 - Phase 7 done: PDF report generation via pdfkit; `/api/pdf/generate` endpoint; result pages have "PDF Report" download button.
+- Phase 9 done: Tử Vi deeper output — interactive 5-tab UI (Tổng quan, Cung Mệnh, Đại Hạn, Tứ Hóa, Các Cung); cách cục pattern detection (Tử Tương, Cơ Âm, Dương Lương, v.v); deeper star meanings; current DaXian analysis.
+- Phase 10 done: Tarot card images — SVG generative cards from `src/lib/tarot/svg-generator`; TarotCard component with image/detail toggle; graceful fallback if SVG missing.
 - Verification baseline for these phases: `npm run lint` and `npm run build` both passed after each phase.
 
 **Remaining phases:**
 - Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres) — postponed.
-- Phase 9: Tử Vi deeper output — richer tab interaction, pattern detection (cách cục), deeper star meanings.
-- Phase 10: Tarot card images — Rider-Waite 78-card PNG set, per-card image render.
+- Phase 8: TBD (placeholder).
 
-Recommended next: Phase 9 (Tử Vi richness) or Phase 10 (Tarot UX polish).
+Recommended next: Phase 5 (auth/payment/database) or Phase 8 (TBD feature discovery).
 
 ## Git/deploy
 - GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`

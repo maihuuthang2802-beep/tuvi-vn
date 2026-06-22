@@ -5,6 +5,7 @@ import { ReadingResult, TarotCardDraw } from '@/lib/readings';
 import { IChingReading } from '@/lib/iching/engine';
 import { useAIInterpretation } from '@/hooks/useAIInterpretation';
 import { downloadPDF } from '@/lib/pdf';
+import TarotCard from '@/components/tarot/TarotCard';
 import { useState } from 'react';
 
 interface BasicResultProps {
@@ -91,12 +92,17 @@ export default function BasicResultClient({ service, result, reading, tarotDraws
         {tarotDraws ? (
           <div className={`grid gap-4 ${tarotDraws.length === 1 ? 'md:grid-cols-1' : 'md:grid-cols-3'}`}>
             {tarotDraws.map((card, index) => (
-              <section key={`${card.name}-${index}`} className="rounded-[24px] border border-tarot/25 bg-[rgba(123,95,221,0.10)] p-5">
-                <div className="text-[11px] uppercase tracking-[2px] text-tarot">{params.spread === '1' ? 'Thông điệp chính' : index === 0 ? 'Quá khứ' : index === 1 ? 'Hiện tại' : 'Hướng đi'}</div>
-                <div className="mt-2 font-[var(--font-display)] text-[26px] font-bold text-text">{card.name}</div>
-                <div className="text-[13px] text-text-2">{card.arcana === 'major' ? 'Major Arcana' : `${card.rank} · ${card.suit}`} · {card.reversed ? 'Ngược' : 'Xuôi'}</div>
-                <p className="mt-3 text-[14px] text-text-2">{card.reversed ? card.reversedMeaning : card.uprightMeaning}</p>
-              </section>
+              <TarotCard
+                key={`${card.name}-${index}`}
+                name={card.name}
+                reversed={card.reversed}
+                arcana={card.arcana}
+                suit={card.suit}
+                rank={card.rank}
+                uprightMeaning={card.uprightMeaning}
+                reversedMeaning={card.reversedMeaning}
+                index={index}
+              />
             ))}
           </div>
         ) : null}
