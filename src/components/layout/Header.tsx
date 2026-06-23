@@ -13,6 +13,7 @@ export default function Header() {
     { href: '/tu-vi', label: 'Tử Vi' },
     { href: '/tu-vi/hop-menh', label: 'Hợp Mệnh' },
     { href: '/tu-vi/kien-thuc', label: 'Kiến Thức' },
+    { href: '/co-thu', label: 'Cổ Thư' },
     { href: '/kinh-dich', label: 'Kinh Dịch' },
     { href: '/xin-xam', label: 'Xin Xăm' },
     { href: '/tarot', label: 'Tarot' },

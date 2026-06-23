@@ -1,8 +1,11 @@
 import type { ClassicBook, ClassicSearchHit } from './types';
 import { guSuiFu } from './data/cot-tuy-phu';
 import { tuViToanThu } from './data/tu-vi-toan-thu';
+import { dauSoToanTap } from './data/dau-so-toan-tap';
+import { dauSoToanThu } from './data/dau-so-toan-thu';
+import { STAR_PROFILES } from '../ziwei/knowledge';
 
-export const ALL_CLASSIC_BOOKS: ClassicBook[] = [guSuiFu, tuViToanThu];
+export const ALL_CLASSIC_BOOKS: ClassicBook[] = [guSuiFu, tuViToanThu, dauSoToanTap, dauSoToanThu];
 
 export const TOTAL_CLASSIC_PARAGRAPHS = ALL_CLASSIC_BOOKS.reduce((sum, book) => sum + book.chapters.reduce((inner, chapter) => inner + chapter.paragraphs.length, 0), 0);
 
@@ -38,4 +41,43 @@ export function searchClassics(query: string, limit = 20): ClassicSearchHit[] {
   }
 
   return hits;
+}
+
+export interface StarClassicMention {
+  bookSlug: string;
+  bookTitle: string;
+  chapterTitle: string;
+  paragraphId: string;
+  text: string;
+}
+
+export function getClassicMentionsForStar(starName: string, limit = 6): StarClassicMention[] {
+  const hits: StarClassicMention[] = [];
+  for (const book of ALL_CLASSIC_BOOKS) {
+    for (const chapter of book.chapters) {
+      for (const paragraph of chapter.paragraphs) {
+        if (!paragraph.text.includes(starName)) continue;
+        hits.push({
+          bookSlug: book.slug,
+          bookTitle: book.title,
+          chapterTitle: chapter.title,
+          paragraphId: paragraph.id,
+          text: paragraph.text,
+        });
+        if (hits.length >= limit) return hits;
+      }
+    }
+  }
+  return hits;
+}
+
+export function getStarsMentionedInBook(bookSlug: string): string[] {
+  const book = getClassicBookBySlug(bookSlug);
+  if (!book) return [];
+  const names = new Set<string>();
+  for (const profile of STAR_PROFILES) {
+    const found = book.chapters.some((chapter) => chapter.paragraphs.some((p) => p.text.includes(profile.name)));
+    if (found) names.add(profile.name);
+  }
+  return Array.from(names);
 }

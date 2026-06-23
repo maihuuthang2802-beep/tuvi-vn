@@ -28,6 +28,8 @@ export default function TuViPage() {
   const [chart, setChart] = useState<ZiweiChart | null>(null);
   const [selectedPalace, setSelectedPalace] = useState<Palace | null>(null);
   const [view, setView] = useState<TimeView>('mingpan');
+  const [highlightBranch, setHighlightBranch] = useState<number | null>(null);
+  const [liunianYear, setLiunianYear] = useState<number | null>(null);
 
   const filteredProvinces = useMemo(() => PROVINCES.filter((p) => p.name.toLowerCase().includes(provinceQuery.toLowerCase())), [provinceQuery]);
   const currentProvince = PROVINCES.find((p) => p.name === province);
@@ -107,14 +109,14 @@ export default function TuViPage() {
         </form>
 
         <div className="space-y-4">
-          {chart ? <TimeNav chart={chart} view={view} onViewChange={setView} /> : null}
+          {chart ? <TimeNav chart={chart} view={view} onViewChange={setView} onHighlightBranchChange={setHighlightBranch} onLiunianYearChange={setLiunianYear} /> : null}
           <div className="rounded-[20px] border border-border bg-surface p-5">
-            {chart ? <ChartBoard chart={chart} selectedPalace={selectedPalace} onPalaceSelect={setSelectedPalace} /> : <div className="flex min-h-[520px] items-center justify-center rounded-[18px] border border-border bg-surface-2 text-[14px] text-text-3">Bấm &quot;Xem workbench&quot; để dựng trước lá số và chọn từng cung.</div>}
+            {chart ? <ChartBoard chart={chart} selectedPalace={selectedPalace} onPalaceSelect={setSelectedPalace} highlightBranch={highlightBranch} /> : <div className="flex min-h-[520px] items-center justify-center rounded-[18px] border border-border bg-surface-2 text-[14px] text-text-3">Bấm &quot;Xem workbench&quot; để dựng trước lá số và chọn từng cung.</div>}
           </div>
         </div>
 
         <div>
-          {chart ? <PalaceInsightPanel chart={chart} palace={selectedPalace} /> : <div className="rounded-[20px] border border-border bg-surface p-5 text-[14px] text-text-3">Panel này sẽ hiện giải nghĩa cung, sao và tứ hóa khi đã dựng workbench.</div>}
+          {chart ? <PalaceInsightPanel chart={chart} palace={selectedPalace} liunianYear={liunianYear} /> : <div className="rounded-[20px] border border-border bg-surface p-5 text-[14px] text-text-3">Panel này sẽ hiện giải nghĩa cung, sao và tứ hóa khi đã dựng workbench.</div>}
         </div>
       </section>
 

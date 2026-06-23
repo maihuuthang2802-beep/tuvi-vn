@@ -1,5 +1,6 @@
 import type { ZiweiChart, Palace } from './types';
 import { PALACE_VI, SIHUA_VI, viStars, viWuxingJu } from './vietnamese';
+import { getSihuaInPhuThe, getSpouseProfile } from './spouse-knowledge';
 
 export interface CompatibilityAxis {
   key: 'emotion' | 'communication' | 'marriage' | 'conflict';
@@ -170,6 +171,32 @@ export function analyzeCompatibility(chartA: ZiweiChart, chartB: ZiweiChart): Co
     marriage >= 65 ? 'Nếu tính chuyện dài lâu, nên bàn sớm về tài chính, gia đình và nơi ở.' : 'Chưa nên quyết nhanh chuyện cam kết lớn trước khi thử qua áp lực thực tế.',
   ];
 
+  function buildPhuTheHighlights(name: string, phuThe?: Palace) {
+    const lines: string[] = [];
+    const mainStars = getMajorStars(phuThe);
+    if (!mainStars.length) {
+      lines.push(`${name}: Phu thê vô chính diệu, luận theo cung mượn đối cung.`);
+    }
+    mainStars.forEach((starName) => {
+      const profile = getSpouseProfile(starName);
+      if (!profile) return;
+      lines.push(`${name} · ${viStars([starName])}: ${profile.summary} Người bạn đời: ${profile.spouseTraits} Tuổi cưới: ${profile.timing}`);
+    });
+    const kyStar = phuThe?.stars.find((star) => star.siHua === '忌');
+    const locStar = phuThe?.stars.find((star) => star.siHua === '禄');
+    if (kyStar) {
+      const note = getSihuaInPhuThe('忌');
+      if (note) lines.push(`${name} · Hóa Kỵ tại Phu thê (${viStars([kyStar.name])}): ${note}`);
+    }
+    if (locStar) {
+      const note = getSihuaInPhuThe('禄');
+      if (note) lines.push(`${name} · Hóa Lộc tại Phu thê (${viStars([locStar.name])}): ${note}`);
+    }
+    return lines;
+  }
+
+  const phuTheHighlights = [...buildPhuTheHighlights(personA.name, personA.phuThe), ...buildPhuTheHighlights(personB.name, personB.phuThe)];
+
   const premiumSections: CompatibilitySection[] = [
     {
       title: 'Mệnh ↔ Phu thê',
@@ -208,6 +235,11 @@ export function analyzeCompatibility(chartA: ZiweiChart, chartB: ZiweiChart): Co
         `${personA.name}: ${personA.currentDaXian ? `Tuổi ${personA.currentDaXian.startAge}-${personA.currentDaXian.endAge} tại cung ${PALACE_VI[personA.currentDaXian.palaceName] || personA.currentDaXian.palaceName}` : 'Chưa xác định đại hạn'}.`,
         `${personB.name}: ${personB.currentDaXian ? `Tuổi ${personB.currentDaXian.startAge}-${personB.currentDaXian.endAge} tại cung ${PALACE_VI[personB.currentDaXian.palaceName] || personB.currentDaXian.palaceName}` : 'Chưa xác định đại hạn'}.`,
       ],
+    },
+    {
+      title: 'Phu Thê luận giải (cổ pháp)',
+      summary: 'Luận theo chính tinh tại cung Phu Thê của từng người — khí chất người bạn đời, điềm tốt/xấu, tuổi nên cưới.',
+      highlights: phuTheHighlights.length ? phuTheHighlights : ['Chưa đủ dữ liệu chính tinh tại Phu thê để luận giải theo cổ pháp.'],
     },
   ];
 

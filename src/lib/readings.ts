@@ -184,7 +184,9 @@ export function createReading(input: ReadingInput): ReadingResult {
     return {
       title: `Hợp mệnh: ${chartA.birthInfo.name || 'Người A'} & ${chartB.birthInfo.name || 'Người B'}`,
       summary: `${analysis.level} · ${analysis.score}/100. ${analysis.summary}`,
-      details: analysis.details.concat(analysis.axes.map((axis) => `${axis.label}: ${axis.score}/100 — ${axis.summary}`)),
+      details: analysis.details
+        .concat(analysis.axes.map((axis) => `${axis.label}: ${axis.score}/100 — ${axis.summary}`))
+        .concat(analysis.premiumSections.find((section) => section.title.includes('Phu Thê'))?.highlights || []),
       advice: analysis.advice.join(' '),
     };
   }

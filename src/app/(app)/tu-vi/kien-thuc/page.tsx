@@ -21,6 +21,7 @@ export default function TuViKnowledgeHomePage() {
           <div className="flex gap-2">
             <Link href="/tu-vi" className="rounded-[12px] border border-gold/20 bg-tuvi-bg px-4 py-3 text-[14px] font-semibold text-gold">Lập lá số</Link>
             <Link href="/tu-vi/hop-menh" className="rounded-[12px] border border-[rgba(44,195,184,0.3)] bg-ai-bg px-4 py-3 text-[14px] font-semibold text-ai">Xem hợp mệnh</Link>
+            <Link href="/co-thu" className="rounded-[12px] border border-border bg-surface-2 px-4 py-3 text-[14px] font-semibold text-text">Cổ thư Tử Vi</Link>
           </div>
         </div>
       </section>

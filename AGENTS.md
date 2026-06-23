@@ -144,16 +144,44 @@ Files shipped:
 - Classics library: `src/lib/classics/types.ts`, `src/lib/classics/index.ts`, `src/lib/classics/data/cot-tuy-phu.ts`, `src/lib/classics/data/tu-vi-toan-thu.ts`.
 - Library pages: `/co-thu` hub with search, `/co-thu/[book]` reader with anchor-tagged chapters, search results linking to paragraph anchors.
 
-**Next planned Phase 19:** Classics ↔ knowledge star links + more classic books.
-- Add per-star links from classic paragraphs mentioning a star to knowledge pages.
-- Add more classic book data files (port from `ziwei-doushu/lib/classics/data/quanji.ts` and `quanshu.ts` style).
-- Add "Cổ thư" link in knowledge sidebar, maybe in Header.
+**Completed Phase 19:** Classics ↔ knowledge star links + more classic books (Jun 2026).
 
-**Next planned Phase 20:** Chart board SVG highlight + deeper board interaction.
-- Draw 三方四正 lines between related palaces on workbench click.
-- Add star brightness/badge overlay on palace cells.
-- Add liunian (year) picker to TimeNav with year overlay.
-- Add link from board palaces to classic search.
+Files shipped:
+- New classic book: `src/lib/classics/data/dau-so-toan-tap.ts` ("Tử Vi Đấu Số Toàn Tập", 5 chương, Vietnamese translation ported/adapted from `ziwei-doushu/lib/classics/data/quanji.ts`), added to `ALL_CLASSIC_BOOKS` in `src/lib/classics/index.ts`.
+- `src/lib/classics/index.ts`: `getClassicMentionsForStar(starName)` scans all classic paragraphs for star-name mentions; `getStarsMentionedInBook(bookSlug)`.
+- `src/app/(app)/tu-vi/kien-thuc/[star]/[topic]/page.tsx`: new "Cổ thư nói về {sao}" section linking to `/co-thu/[book]#paragraphId` anchors (paragraph IDs already rendered as `id` attrs in `co-thu/[book]/page.tsx`).
+- Nav: Header now has "Cổ Thư" link; knowledge hub (`tu-vi/kien-thuc/page.tsx`) has "Cổ thư Tử Vi" button.
+
+**Completed Phase 19b:** Ported `ziwei-doushu/lib/classics/data/quanshu.ts` (Jun 2026).
+- `src/lib/classics/data/dau-so-toan-thu.ts`: "Tử Vi Đẩu Số Toàn Thư" (La Hồng Tiên), 7 chương — Mệnh/Tài bạch/Quan lộc/Phu thê cung luận, tứ hóa luận, cách Cơ Nguyệt Đồng Lương, cách Song Lộc Triều Viên. Added to `ALL_CLASSIC_BOOKS`.
+- All 4 classic books now in `src/lib/classics/index.ts`: Cốt Tủy Phú, Tử Vi Toàn Thư, Tử Vi Đấu Số Toàn Tập (Phase 19), Tử Vi Đẩu Số Toàn Thư (Phase 19b).
+- Still trimmed excerpts, not full ~10万字 source — further depth remains possible future work.
+
+**Completed Phase 20:** Chart board SVG highlight + deeper board interaction (Jun 2026).
+
+Files shipped:
+- `src/components/ziwei/ChartBoard.tsx`: SVG overlay (`pointer-events-none`, viewBox 0-100) draws dashed gold lines from selected palace to its tam phương tứ chính (đối cung + 2 tam hợp) via `BRANCH_CENTER` lookup table; star brightness badge (◆ bright / · normal / ◇ dim) rendered next to each main star name; new `highlightBranch` prop renders a distinct cyan/ai border (separate from click-selected gold border) for đại hạn/lưu niên emphasis.
+- `src/components/ziwei/TimeNav.tsx`: added third view `liunian` (lưu niên) with age stepper (±) bound to current đại hạn range; computes calendar year and its chi-branch (`(year-4)%12`) and reports it via new `onHighlightBranchChange` callback; `daxian` view now also reports its palace branch through the same callback (previously only changed descriptive text, didn't highlight the board).
+- `src/app/(app)/tu-vi/page.tsx`: lifted `highlightBranch` state, wired into both `TimeNav` and `ChartBoard`.
+- `src/components/ziwei/PalaceInsightPanel.tsx`: added "Tra cổ thư về {cung} →" link and per-star "Cổ thư" link, both to `/co-thu?q=...` (reuses existing search).
+- Verified live via preview on `/tu-vi`: tam phương dashed lines render on palace click, brightness badges show, đại hạn/lưu niên highlight switches palace correctly, lưu niên year/branch math confirmed correct (tuổi 31 → năm 2025 → cung Tỵ).
+
+**Fixed (Jun 2026):** Palace-name translation bug found during Phase 20 verification. Root cause: `iztro` returns `palace.name` as short 2-char Chinese (e.g. `官禄`, `迁移`, `仆役`) for all cung except Mệnh, which it returns as `命宫` (with `宫` suffix) — `PALACE_VI` in `src/lib/ziwei/vietnamese.ts` only had `宫`-suffixed keys, plus the "friends palace" used a different name entirely (`仆役` vs the mapped `交友`). Fix: added both short and `宫`-suffixed keys (plus the `仆役` alias) to `PALACE_VI`, and `viPalace()` now also strips a trailing `宫` as a fallback before lookup. Verified live: all 12 cung now show Vietnamese names on the workbench grid.
+
+**Completed Phase 21:** Lưu niên tứ hóa (Jun 2026).
+- `src/components/ziwei/TimeNav.tsx`: new `onLiunianYearChange` callback fires alongside `onHighlightBranchChange` when view is `liunian` (year computed from `chart.birthInfo.year + liunianAge - 1`); fires `null` for other views.
+- `src/app/(app)/tu-vi/page.tsx`: lifted `liunianYear` state, passed to `PalaceInsightPanel`.
+- `src/components/ziwei/PalaceInsightPanel.tsx`: new section "Tứ hóa lưu niên {năm} (can {chi})" using existing `getLiuNianSiHua()` from `src/lib/ziwei/sihua.ts` (previously unused/dormant module); cross-references the year's tứ hóa transforms against the selected palace's actual stars to show only hits landing in that cung.
+- Verified live: lưu niên năm 2025 (can Ất) → Hóa Khoa vào Tử Vi tại cung Mệnh, correctly displayed.
+
+**Completed Phase 22:** Phu Thê luận giải cho Hợp Mệnh (Jun 2026), ported from `ziwei-doushu/lib/ziwei/heming-knowledge.ts` (`STAR_IN_FUQI_GU` + `SIHUA_IN_FUQI_GU`), translated to Vietnamese.
+- New `src/lib/ziwei/spouse-knowledge.ts`: `STAR_IN_PHU_THE` (14 chính tinh × {summary, good, bad, spouseTraits, timing, quote}), `SIHUA_IN_PHU_THE` (4 tứ hóa), `getSpouseProfile()`, `getSihuaInPhuThe()`.
+- `src/lib/ziwei/compatibility.ts`: new `buildPhuTheHighlights()` builds per-person lines from each person's actual Phu Thê chính tinh + Hóa Lộc/Hóa Kỵ hits; appended as new premiumSection "Phu Thê luận giải (cổ pháp)" in `analyzeCompatibility()`.
+- `src/lib/readings.ts`: hop-menh reading `details` now also includes the Phu Thê highlights, so the AI prompt (`/api/ai/interpret`) gets this context too — no prompt template change needed since it already forwards `reading.details`.
+- Audit note: from the same reference repo, `lib/nihai/*` (Ni Hải Hạ's Tianji/Renji/Diji — mostly traditional Chinese medicine content) was deliberately skipped as out-of-scope/legally risky; `lib/ziwei/db-analysis.ts` + `lib/seo/knowledge.ts` were skipped because the source repo ships them as empty placeholders (`STAR_DB = {}`, real content withheld commercially) — nothing there to port.
+- Remaining candidates not yet done: true solar time correction is collected (longitude) but unused — current `/tu-vi` form lets user pick the chi-hour branch directly instead of clock time + longitude correction (gap found during this audit, not fixed); shareable result-card image export (`ShareCardCanvas`/`ShareModal` in source repo) is unported; famous-person example charts (`lib/ziwei/famous.ts`) unported.
+
+**Next planned Phase 23:** TBD — candidates: true solar time correction wiring, share-card image export, famous-person example charts on landing page.
 
 **Postponed (Phase 5, 8):**
 - Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres)

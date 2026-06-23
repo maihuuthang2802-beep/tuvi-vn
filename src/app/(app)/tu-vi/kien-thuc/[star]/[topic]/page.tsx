@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ModuleHero from '@/components/shared/ModuleHero';
 import { getAllKnowledgeRoutes, getKnowledgeEntry, getStarProfile, getTopicDefinition, STAR_PROFILES, TOPICS } from '@/lib/ziwei/knowledge';
+import { getClassicMentionsForStar } from '@/lib/classics';
 
 export function generateStaticParams() {
   return getAllKnowledgeRoutes();
@@ -28,6 +29,8 @@ export default async function TuViKnowledgeDetailPage({ params }: { params: Prom
   const topicDef = getTopicDefinition(topic as never);
 
   if (!entry || !profile || !topicDef) notFound();
+
+  const classicMentions = getClassicMentionsForStar(profile.name);
 
   return (
     <main className="page-enter pb-10">
@@ -82,6 +85,24 @@ export default async function TuViKnowledgeDetailPage({ params }: { params: Prom
             <div className="mt-5 text-[11px] uppercase tracking-[2px] text-gold/70">Gợi ý hành động</div>
             <p className="mt-3 text-[14px] text-text-2">{entry.guidance}</p>
           </article>
+
+          {classicMentions.length > 0 ? (
+            <article className="rounded-[24px] border border-border bg-surface p-5">
+              <div className="text-[11px] uppercase tracking-[2px] text-gold">Cổ thư nói về {profile.name}</div>
+              <div className="mt-4 space-y-3">
+                {classicMentions.map((mention) => (
+                  <Link
+                    key={mention.paragraphId}
+                    href={`/co-thu/${mention.bookSlug}#${mention.paragraphId}`}
+                    className="block rounded-[14px] border border-border bg-surface-2 px-4 py-3 text-[13px] text-text-2 hover:text-gold"
+                  >
+                    <span className="text-[11px] uppercase tracking-[1px] text-gold/80">{mention.bookTitle} · {mention.chapterTitle}</span>
+                    <p className="mt-1 text-text-2">{mention.text}</p>
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ) : null}
 
           <article className="rounded-[24px] border border-border bg-surface p-5">
             <div className="text-[11px] uppercase tracking-[2px] text-gold">Đọc tiếp cùng sao</div>
