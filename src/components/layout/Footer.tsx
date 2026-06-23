@@ -9,11 +9,6 @@ export default function Footer() {
     { label: 'AI Luận giải', href: '/goi-dich-vu' },
   ];
 
-  const legalLinks = [
-    { label: 'Chính sách bảo mật', href: '#' },
-    { label: 'Điều khoản sử dụng', href: '#' },
-    { label: 'Liên hệ', href: '#' },
-  ];
 
   return (
     <footer className="border-t border-border bg-[#080611] px-5 py-8 md:py-12">
@@ -50,13 +45,11 @@ export default function Footer() {
               </div>
             </div>
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-[2px] text-gold mb-3">Pháp lý</div>
-              <div className="flex flex-col gap-2">
-                {legalLinks.map(link => (
-                  <Link key={link.href} href={link.href} className="text-[13px] text-text-2 hover:text-gold transition-colors">
-                    {link.label}
-                  </Link>
-                ))}
+              <div className="text-[11px] font-bold uppercase tracking-[2px] text-gold mb-3">Điều hướng</div>
+              <div className="flex flex-col gap-2 text-[13px] text-text-2">
+                <Link href="/" className="hover:text-gold transition-colors">Trang chủ</Link>
+                <Link href="/ca-nhan" className="hover:text-gold transition-colors">Cá nhân</Link>
+                <Link href="/lich-su" className="hover:text-gold transition-colors">Lịch sử</Link>
               </div>
             </div>
           </div>

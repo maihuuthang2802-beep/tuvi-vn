@@ -55,14 +55,14 @@ export default function Header() {
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-[12px] border border-border bg-surface shadow-lg overflow-hidden">
                 <Link
-                  href="#"
+                  href="/ca-nhan"
                   onClick={() => setProfileOpen(false)}
                   className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors"
                 >
                   Cá nhân
                 </Link>
                 <Link
-                  href="#"
+                  href="/lich-su"
                   onClick={() => setProfileOpen(false)}
                   className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors border-t border-border"
                 >

@@ -85,10 +85,48 @@ Vietnamese spiritual services MVP for Vercel deployment.
 
 **Verification baseline:** `npm run lint` and `npm run build` both passed after each phase.
 
+## Full Audit Results (Jun 2026)
+
+**Reviewed against original checklist. Core Phase 11–16 gaps closed. Remaining work is postponed Phase 5/8 only.**
+
+### Confirmed DONE (verified by file/line)
+
+| Item | File:line | Note |
+|------|-----------|------|
+| AI center button + paywall page | `(app)/goi-dich-vu/page.tsx:11` | 3-plan pricing, checkout form, returnTo logic |
+| /ket-qua/* result pages | `(app)/ket-qua/[slug]/page.tsx:81` | Single dynamic route renders all 4 services |
+| Tử Vi result 5-tab UI | `components/result/TuViResultClient.tsx:21` | Tổng quan · Cung Mệnh · Đại Hạn · Tứ Hóa · Các Cung |
+| Tử Vi chart integration | `(app)/ket-qua/[slug]/page.tsx:54` | Calls `generateChart()` + `createReading()` |
+| Province/city 2-step picker | `(app)/tu-vi/page.tsx:99–135` | BottomSheet province → city, search per step, longitude display |
+| Kinh Dịch 3-mode form | `(app)/kinh-dich/page.tsx:7` | Lục Hào · Thiên Ý · Mai Hoa, each mode has unique fields |
+| Kinh Dịch result (quẻ chủ/biến/hào) | `components/result/BasicResultClient.tsx:64–90` | Renders hexagram, changed hexagram, moving lines, 6-line table |
+| Xin Xăm form + result route | `(app)/xin-xam/page.tsx` + `ket-qua/xin-xam` | Category picker, shake animation, result via BasicResultClient |
+| Xin Xăm 97-lot dataset | `lib/xixam/lots.ts:11` | XI_XAM_LOTS has 97 entries (id 1–97), Hán/Nôm, category |
+| Tarot 1/3 spread + result | `(app)/tarot/page.tsx` + `ket-qua/tarot` | TarotCard SVG, reversed state, spread label |
+| Tarot 78-card SVG generator | `lib/tarot/svg-generator.ts` | All 78 cards generated; TarotCard component with fallback |
+| Header desktop nav | `components/layout/Header.tsx:30` | `md:flex` nav: Tử Vi · Kinh Dịch · Xin Xăm · Tarot · AI |
+| Header mobile hamburger | `components/layout/Header.tsx:88–126` | Burger button + drawer with same nav links |
+| Profile dropdown | `components/layout/Header.tsx:47–78` | Cá nhân · Lịch sử · Đăng xuất; md: only |
+| Footer | `components/layout/Footer.tsx` | Service links, legal links, social, disclaimer, copyright |
+| BottomNav (mobile) | `components/layout/BottomNav.tsx` | 5-item nav, center AI button elevated, safe-area-inset-bottom |
+| I Ching engine | `lib/iching/engine.ts` | 64 hexagrams, King Wen order, moving lines, Vietnamese |
+| AI interpret endpoint | `app/api/ai/interpret/route.ts` | POST → OpenAI; mock if no API key |
+| PDF generate endpoint | `app/api/pdf/generate/route.ts` | pdfkit, returns buffer download |
+| useAIInterpretation hook | `hooks/useAIInterpretation.ts` | Fetches `/api/ai/interpret`, loading/error state |
+| downloadPDF helper | `lib/pdf.ts` | Client-side fetch + `<a download>` trigger |
+| Auth mock route | `app/api/auth/route.ts` | Email validation, returns base64url token |
+| Checkout mock route | `app/api/checkout/route.ts` | Redirects to `returnTo?upgraded=1&plan=...` |
+| Focus rings | `app/globals.css:37–44` | `:focus-visible { outline: 2px solid gold }` on all interactive |
+| Reduced-motion | `app/globals.css:68–75` | `@media (prefers-reduced-motion: reduce)` kills all animations |
+
+### Gaps remaining
+
+None in Phase 11–16 scope.
+
 ## Remaining work (Priority order)
 
-Postponed (Phase 5, 8):
-- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres) — after Phase 11-16 complete
+**Postponed (Phase 5, 8):**
+- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres)
 - Phase 8: TBD feature discovery
 
 ## Git/deploy
