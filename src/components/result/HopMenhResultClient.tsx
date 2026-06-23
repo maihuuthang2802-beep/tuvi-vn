@@ -8,6 +8,7 @@ import type { ReadingResult } from '@/lib/readings';
 import { viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
 import { useAIInterpretation } from '@/hooks/useAIInterpretation';
 import { downloadPDF } from '@/lib/pdf';
+import ShareCardButton from '@/components/share/ShareCardButton';
 
 interface HopMenhResultClientProps {
   result: ReadingResult;
@@ -202,6 +203,13 @@ export default function HopMenhResultClient({ result, analysis, chartA, chartB, 
           >
             {downloading ? 'Đang tạo...' : 'PDF Report'}
           </button>
+          <ShareCardButton
+            title={`Hợp mệnh ${params.aName || 'A'} & ${params.bName || 'B'}`}
+            subtitle={`Điểm hợp ${analysis.score}/100 · ${analysis.level}`}
+            lines={[analysis.summary, ...analysis.advice.slice(0, 2)]}
+            filename="hop-menh"
+            className="mt-2 w-full rounded-[12px] border border-gold/30 px-4 py-3 text-[13px] font-bold text-gold transition disabled:opacity-50"
+          />
         </section>
 
         <section className="rounded-[24px] border border-border bg-surface p-5">

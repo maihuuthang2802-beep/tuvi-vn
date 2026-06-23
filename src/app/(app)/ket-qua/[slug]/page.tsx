@@ -7,6 +7,7 @@ import { analyzeCompatibility } from '@/lib/ziwei/compatibility';
 import { castIChing } from '@/lib/iching/engine';
 import { PROVINCES } from '@/lib/ziwei/cities';
 import { generateChart } from '@/lib/ziwei/algorithm';
+import { resolveBirthHour } from '@/lib/ziwei/true-solar';
 
 const HOURS = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
@@ -26,11 +27,6 @@ function getServiceMeta(service: string) {
   return { icon: '✦', title: 'Kết Quả Tarot', subtitle: 'Trải bài · Tóm lược · AI luận giải', accent: 'var(--color-tarot)', aiText: 'Mở AI luận giải Tarot' };
 }
 
-function getHourIndex(hour: string | undefined) {
-  const idx = HOURS.indexOf(hour || 'Tý');
-  return idx >= 0 ? idx : 0;
-}
-
 function getLocation(provinceName: string | undefined, cityName: string | undefined, longitudeValue: string | undefined) {
   const province = PROVINCES.find((item) => item.name === provinceName) || PROVINCES[0];
   const city = province.cities.find((item) => item.name === cityName) || province.cities[0];
@@ -42,23 +38,29 @@ function renderTuVi(params: Record<string, string | undefined>) {
   const location = getLocation(params.province, params.city, params.longitude);
   const paywallHref = buildPlanHref('tu-vi', params);
   const unlocked = params.upgraded === '1';
-  const birthDate = params.birthDate || '1995-01-01';
+  const { hourIndex, dateStr } = resolveBirthHour({
+    branch: params.birthHour,
+    branchList: HOURS,
+    clockTime: params.birthClockTime,
+    longitude: location.longitude,
+    dateStr: params.birthDate || '1995-01-01',
+  });
   const result = createReading({
     service: 'tu-vi',
     name: params.name,
-    birthDate,
-    birthTime: `${String(getHourIndex(params.birthHour) * 2).padStart(2, '0')}:00`,
+    birthDate: dateStr,
+    birthTime: `${String(hourIndex * 2).padStart(2, '0')}:00`,
     gender: params.gender === 'Nữ' ? 'female' : 'male',
     province: location.province,
     city: location.city,
     longitude: location.longitude,
   });
-  const date = new Date(birthDate);
+  const date = new Date(dateStr);
   const chart = generateChart({
     year: date.getFullYear(),
     month: date.getMonth() + 1,
     day: date.getDate(),
-    hour: getHourIndex(params.birthHour),
+    hour: hourIndex,
     gender: params.gender === 'Nữ' ? 'female' : 'male',
     name: params.name,
     province: location.province,
@@ -74,15 +76,27 @@ function renderHopMenh(params: Record<string, string | undefined>) {
   const locationB = getLocation(params.bProvince, params.bCity, params.bLongitude);
   const paywallHref = buildPlanHref('hop-menh', params);
   const unlocked = params.upgraded === '1';
-  const birthDateA = params.aBirthDate || '1995-01-01';
-  const birthDateB = params.bBirthDate || '1996-01-01';
-  const dateA = new Date(birthDateA);
-  const dateB = new Date(birthDateB);
+  const resolvedA = resolveBirthHour({
+    branch: params.aBirthHour,
+    branchList: HOURS,
+    clockTime: params.aBirthClockTime,
+    longitude: locationA.longitude,
+    dateStr: params.aBirthDate || '1995-01-01',
+  });
+  const resolvedB = resolveBirthHour({
+    branch: params.bBirthHour,
+    branchList: HOURS,
+    clockTime: params.bBirthClockTime,
+    longitude: locationB.longitude,
+    dateStr: params.bBirthDate || '1996-01-01',
+  });
+  const dateA = new Date(resolvedA.dateStr);
+  const dateB = new Date(resolvedB.dateStr);
   const chartA = generateChart({
     year: dateA.getFullYear(),
     month: dateA.getMonth() + 1,
     day: dateA.getDate(),
-    hour: getHourIndex(params.aBirthHour),
+    hour: resolvedA.hourIndex,
     gender: params.aGender === 'Nữ' ? 'female' : 'male',
     name: params.aName,
     province: locationA.province,
@@ -93,7 +107,7 @@ function renderHopMenh(params: Record<string, string | undefined>) {
     year: dateB.getFullYear(),
     month: dateB.getMonth() + 1,
     day: dateB.getDate(),
-    hour: getHourIndex(params.bBirthHour),
+    hour: resolvedB.hourIndex,
     gender: params.bGender === 'Nữ' ? 'female' : 'male',
     name: params.bName,
     province: locationB.province,

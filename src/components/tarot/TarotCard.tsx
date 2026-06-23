@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getCardImagePath } from '@/lib/tarot/constants';
+import { generateTarotSvg } from '@/lib/tarot/svg-generator';
 
 interface TarotCardProps {
   name: string;
@@ -27,8 +27,7 @@ export default function TarotCard({
   index = 0,
 }: TarotCardProps) {
   const [showImage, setShowImage] = useState(true);
-  const [imageError, setImageError] = useState(false);
-  const imagePath = getCardImagePath(name);
+  const cardSvg = generateTarotSvg({ name, arcana: arcana === 'minor' ? 'minor' : 'major', suit, reversed: false });
 
   return (
     <div className="flex flex-col gap-3">
@@ -36,28 +35,15 @@ export default function TarotCard({
         className={`group relative rounded-[18px] border border-tarot/25 bg-gradient-to-br from-tarot/20 to-[rgba(123,95,221,0.10)] p-4 overflow-hidden
           ${index === 0 ? 'md:col-span-3 md:max-w-md md:mx-auto' : ''}`}
       >
-        {/* Image Container */}
-        {showImage && !imageError && (
+        {/* Card art */}
+        {showImage && (
           <div className="relative w-full aspect-[3/4] mb-3 rounded-lg overflow-hidden border border-tarot/30 bg-surface">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imagePath}
-              alt={name}
-              onError={() => setImageError(true)}
-              className={`w-full h-full object-cover transition-transform group-hover:scale-105 ${reversed ? 'rotate-180' : ''}`}
+            <div
+              className={`h-full w-full transition-transform group-hover:scale-105 ${reversed ? 'rotate-180' : ''}`}
+              dangerouslySetInnerHTML={{ __html: cardSvg }}
             />
             <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-[10px] text-tarot">
               {reversed ? 'Ngược' : 'Xuôi'}
-            </div>
-          </div>
-        )}
-
-        {/* Fallback visual (no image) */}
-        {showImage && imageError && (
-          <div className={`w-full aspect-[3/4] mb-3 rounded-lg overflow-hidden border border-tarot/30 bg-gradient-to-br from-tarot/30 to-tarot/10 flex items-center justify-center ${reversed ? 'rotate-180' : ''}`}>
-            <div className="text-center">
-              <p className="text-[28px]">✦</p>
-              <p className="text-[11px] text-tarot mt-1">Tarot</p>
             </div>
           </div>
         )}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import BottomSheet from '@/components/layout/BottomSheet';
 import ModuleHero from '@/components/shared/ModuleHero';
 import { PROVINCES } from '@/lib/ziwei/cities';
+import { calcTrueSolarBranch } from '@/lib/ziwei/true-solar';
 
 const DEFAULT_PROVINCE = PROVINCES.find((item) => item.name === 'Hà Nội') || PROVINCES[0];
 const DEFAULT_CITY = DEFAULT_PROVINCE.cities[0];
@@ -21,6 +22,10 @@ function PersonForm({
   setGender,
   hour,
   setHour,
+  timeMode,
+  setTimeMode,
+  clockTime,
+  setClockTime,
   province,
   city,
   longitude,
@@ -33,11 +38,17 @@ function PersonForm({
   setGender: (value: 'Nam' | 'Nữ') => void;
   hour: string;
   setHour: (value: string) => void;
+  timeMode: 'branch' | 'exact';
+  setTimeMode: (value: 'branch' | 'exact') => void;
+  clockTime: string;
+  setClockTime: (value: string) => void;
   province: string;
   city: string;
   longitude: number;
   openPicker: () => void;
 }) {
+  const [clockHourText, clockMinuteText] = clockTime.split(':');
+  const trueSolarHourPreview = calcTrueSolarBranch(Number(clockHourText) || 0, Number(clockMinuteText) || 0, longitude);
   return (
     <div className="rounded-[20px] border border-border bg-surface p-5">
       <div className="text-[11px] uppercase tracking-[2px]" style={{ color: accent }}>{title}</div>
@@ -52,12 +63,25 @@ function PersonForm({
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {HOURS.map((item) => (
-              <button key={`${prefix}-${item}`} type="button" onClick={() => setHour(item)} className={`rounded-[12px] border px-3 py-3 text-[14px] ${hour === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+          <div className="mt-2 flex gap-2">
+            {([['branch', 'Canh giờ'], ['exact', 'Giờ chính xác']] as const).map(([key, label]) => (
+              <button key={key} type="button" onClick={() => setTimeMode(key)} className={`flex-1 rounded-full px-3 py-2 text-[12px] font-semibold ${timeMode === key ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{label}</button>
             ))}
           </div>
+          {timeMode === 'branch' ? (
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {HOURS.map((item) => (
+                <button key={`${prefix}-${item}`} type="button" onClick={() => setHour(item)} className={`rounded-[12px] border px-3 py-3 text-[14px] ${hour === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3">
+              <input type="time" value={clockTime} onChange={(e) => setClockTime(e.target.value)} className="w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none" />
+              <p className="mt-2 text-[12px] text-text-3">Giờ mặt trời thật tại {city}: canh <span className="font-semibold text-gold">{HOURS[trueSolarHourPreview]}</span>.</p>
+            </div>
+          )}
           <input type="hidden" name={`${prefix}BirthHour`} value={hour} />
+          <input type="hidden" name={`${prefix}BirthClockTime`} value={timeMode === 'exact' ? clockTime : ''} />
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỚI TÍNH</label>
@@ -91,6 +115,10 @@ export default function HopMenhPage() {
   const [genderB, setGenderB] = useState<'Nam' | 'Nữ'>('Nữ');
   const [hourA, setHourA] = useState('Tý');
   const [hourB, setHourB] = useState('Tý');
+  const [timeModeA, setTimeModeA] = useState<'branch' | 'exact'>('branch');
+  const [timeModeB, setTimeModeB] = useState<'branch' | 'exact'>('branch');
+  const [clockTimeA, setClockTimeA] = useState('12:00');
+  const [clockTimeB, setClockTimeB] = useState('12:00');
   const [provinceA, setProvinceA] = useState(DEFAULT_PROVINCE.name);
   const [provinceB, setProvinceB] = useState(DEFAULT_PROVINCE.name);
   const [cityA, setCityA] = useState(DEFAULT_CITY.name);
@@ -123,8 +151,8 @@ export default function HopMenhPage() {
       <ModuleHero icon="◎" title="Hợp Mệnh Tử Vi" subtitle="Đối chiếu hai lá số · Mệnh, Phu thê, Phúc đức, Đại hạn" accent="var(--color-tuvi)" />
       <form action="/ket-qua/hop-menh" className="mx-5 mt-5 space-y-5 md:mx-auto md:max-w-[1100px]">
         <div className="grid gap-5 md:grid-cols-2">
-          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} />
-          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} />
+          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} />
+          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} />
         </div>
         <div className="rounded-[20px] border border-gold/15 bg-tuvi-bg p-5 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-gold">Phạm vi đối chiếu</div>

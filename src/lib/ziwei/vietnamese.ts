@@ -124,17 +124,15 @@ export function viSiHua(name?: string) {
   return name ? SIHUA_VI[name] || name : undefined;
 }
 
+const WUXING_JU_VI: Record<string, string> = {
+  '水': 'Thủy', '木': 'Mộc', '金': 'Kim', '土': 'Thổ', '火': 'Hỏa',
+  '二': 'Nhị', '三': 'Tam', '四': 'Tứ', '五': 'Ngũ', '六': 'Lục',
+  '局': 'Cục',
+};
+
 export function viWuxingJu(name: string) {
   return name
-    .replace('水', 'Thủy')
-    .replace('木', 'Mộc')
-    .replace('金', 'Kim')
-    .replace('土', 'Thổ')
-    .replace('火', 'Hỏa')
-    .replace('二', 'Nhị')
-    .replace('三', 'Tam')
-    .replace('四', 'Tứ')
-    .replace('五', 'Ngũ')
-    .replace('六', 'Lục')
-    .replace('局', 'cục');
+    .split('')
+    .map((ch) => WUXING_JU_VI[ch] || ch)
+    .join(' ');
 }

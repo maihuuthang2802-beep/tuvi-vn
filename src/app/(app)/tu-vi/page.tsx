@@ -9,6 +9,7 @@ import TimeNav, { type TimeView } from '@/components/ziwei/TimeNav';
 import PalaceInsightPanel from '@/components/ziwei/PalaceInsightPanel';
 import { PROVINCES } from '@/lib/ziwei/cities';
 import { generateChart } from '@/lib/ziwei/algorithm';
+import { calcTrueSolarBranch } from '@/lib/ziwei/true-solar';
 import type { Palace, ZiweiChart } from '@/lib/ziwei/types';
 
 const DEFAULT_PROVINCE = PROVINCES.find((item) => item.name === 'Hà Nội') || PROVINCES[0];
@@ -19,6 +20,8 @@ export default function TuViPage() {
   const [gender, setGender] = useState<'Nam' | 'Nữ'>('Nam');
   const [calendar, setCalendar] = useState<'Dương lịch' | 'Âm lịch'>('Dương lịch');
   const [hour, setHour] = useState('Tý');
+  const [timeMode, setTimeMode] = useState<'branch' | 'exact'>('branch');
+  const [clockTime, setClockTime] = useState('12:00');
   const [province, setProvince] = useState(DEFAULT_PROVINCE.name);
   const [city, setCity] = useState(DEFAULT_CITY.name);
   const [longitude, setLongitude] = useState(DEFAULT_CITY.longitude);
@@ -31,6 +34,9 @@ export default function TuViPage() {
   const [highlightBranch, setHighlightBranch] = useState<number | null>(null);
   const [liunianYear, setLiunianYear] = useState<number | null>(null);
 
+  const [clockHourText, clockMinuteText] = clockTime.split(':');
+  const trueSolarHourPreview = calcTrueSolarBranch(Number(clockHourText) || 0, Number(clockMinuteText) || 0, longitude);
+
   const filteredProvinces = useMemo(() => PROVINCES.filter((p) => p.name.toLowerCase().includes(provinceQuery.toLowerCase())), [provinceQuery]);
   const currentProvince = PROVINCES.find((p) => p.name === province);
   const filteredCities = useMemo(() => currentProvince?.cities.filter((c) => c.name.toLowerCase().includes(cityQuery.toLowerCase())) ?? [], [currentProvince, cityQuery]);
@@ -40,7 +46,7 @@ export default function TuViPage() {
       year: 1995,
       month: 1,
       day: 1,
-      hour: HOURS.indexOf(hour),
+      hour: timeMode === 'exact' ? trueSolarHourPreview : HOURS.indexOf(hour),
       gender: gender === 'Nữ' ? 'female' : 'male',
       name: 'Đương số',
       province,
@@ -72,12 +78,27 @@ export default function TuViPage() {
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {HOURS.map((item) => (
-                <button key={item} type="button" onClick={() => setHour(item)} className={`rounded-[12px] border px-3 py-3 text-[14px] ${hour === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+            <div className="mt-2 flex gap-2">
+              {([['branch', 'Chọn canh giờ'], ['exact', 'Biết giờ chính xác']] as const).map(([key, label]) => (
+                <button key={key} type="button" onClick={() => setTimeMode(key)} className={`flex-1 rounded-full px-3 py-2 text-[12px] font-semibold ${timeMode === key ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{label}</button>
               ))}
             </div>
+            {timeMode === 'branch' ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {HOURS.map((item) => (
+                  <button key={item} type="button" onClick={() => setHour(item)} className={`rounded-[12px] border px-3 py-3 text-[14px] ${hour === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3">
+                <input type="time" value={clockTime} onChange={(e) => setClockTime(e.target.value)} className="w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" />
+                <p className="mt-2 text-[12px] text-text-3">
+                  Giờ mặt trời thật tại {city} (kinh độ {longitude.toFixed(2)}°Đ): canh <span className="font-semibold text-gold">{HOURS[trueSolarHourPreview]}</span>. Tý thời 23:00-23:59 sẽ tự lập số theo ngày kế tiếp.
+                </p>
+              </div>
+            )}
             <input type="hidden" name="birthHour" value={hour} />
+            <input type="hidden" name="birthClockTime" value={timeMode === 'exact' ? clockTime : ''} />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỚI TÍNH</label>

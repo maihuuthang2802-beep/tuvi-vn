@@ -8,6 +8,7 @@ import { BRANCH_VI, PALACE_VI, SIHUA_VI, viPalace, viStars, viWuxingJu } from '@
 import { getStarSlugByName } from '@/lib/ziwei/knowledge';
 import { detectCachCuc, getStarDeepMeaning, analyzeCurrentDaXian } from '@/lib/ziwei/patterns';
 import { downloadPDF } from '@/lib/pdf';
+import ShareCardButton from '@/components/share/ShareCardButton';
 
 interface TuViResultClientProps {
   result: ReadingResult;
@@ -298,6 +299,18 @@ export default function TuViResultClient({
             >
               {downloading ? 'Đang tạo...' : 'PDF Report'}
             </button>
+            <ShareCardButton
+              title={`Lá số ${params.name || 'Tử Vi'}`}
+              subtitle={`${viWuxingJu(chart.wuxingJuName)} · ${BRANCH_VI[ming?.branch ?? 0]}`}
+              lines={[
+                `Mệnh: ${ming?.stars.filter((s) => s.type === 'major').length ? viStars(ming.stars.filter((s) => s.type === 'major').map((s) => s.name)) : 'Vô chính diệu'}`,
+                currentDaXian ? `Đại hạn: ${currentDaXian.startAge}-${currentDaXian.endAge} tại cung ${PALACE_VI[currentDaXian.palaceName] || currentDaXian.palaceName}` : 'Chưa xác định đại hạn',
+                ...(patterns.slice(0, 2).map((p) => `Cách cục: ${p.name}`)),
+              ]}
+              chart={chart}
+              filename="tu-vi"
+              className="mt-2 w-full rounded-[12px] border border-gold/30 px-4 py-3 text-[13px] font-bold text-gold transition disabled:opacity-50"
+            />
           </section>
 
           <section className="rounded-[24px] border border-[rgba(44,195,184,0.3)] bg-ai-bg p-5">
