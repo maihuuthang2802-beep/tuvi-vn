@@ -9,7 +9,7 @@ import TarotCard from '@/components/tarot/TarotCard';
 import { useState } from 'react';
 
 interface BasicResultProps {
-  service: 'kinh-dich' | 'xin-xam' | 'tarot';
+  service: 'hop-menh' | 'kinh-dich' | 'xin-xam' | 'tarot';
   result: ReadingResult;
   reading?: IChingReading | null;
   tarotDraws?: TarotCardDraw[] | null;

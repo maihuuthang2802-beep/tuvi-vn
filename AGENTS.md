@@ -125,6 +125,36 @@ None in Phase 11–16 scope.
 
 ## Remaining work (Priority order)
 
+**Completed Phase 17:** Full ziwei expansion delivered (Jun 2026).
+
+Files shipped:
+- Compatibility engine: `src/lib/ziwei/compatibility.ts`, route `/tu-vi/hop-menh`, result route `/ket-qua/hop-menh`.
+- Compatibility UI: `src/components/result/HopMenhResultClient.tsx` tabs overview/axes/people/ai/premium, AI tab with `useAIInterpretation`.
+- Knowledge hub: `src/lib/ziwei/knowledge.ts` 14 stars × 13 topics, detail page `src/app/(app)/tu-vi/kien-thuc/[star]/[topic]/page.tsx`, hub page `src/app/(app)/tu-vi/kien-thuc/page.tsx`, expanded StarProfile with archetype/roles/needs/stress/growth/related stars/keywords.
+- Pattern engine expanded: `src/lib/ziwei/patterns.ts` with evidence/severity/palace fields, new detectors Phu thê/Tài bạch/Quan lộc/current đại hạn.
+- Internal links: result `TuViResultClient` → knowledge per star, per palace, sidebar knowledge + hợp mệnh CTAs. Form `/tu-vi` has knowledge shortcuts. `HopMenhResultClient` sidebar has knowledge + new pair links.
+- AI prompts: new `hop-menh` branch in `src/lib/ai/prompts.ts`.
+- Header: new Hợp Mệnh + Kiến Thức links. ModuleCards: 5-col with Hợp Mệnh card.
+
+**Completed Phase 18:** Chart workbench + classics library (Jun 2026).
+
+Files shipped:
+- Chart workbench: `src/components/ziwei/ChartBoard.tsx`, `src/components/ziwei/TimeNav.tsx`, `src/components/ziwei/PalaceInsightPanel.tsx`.
+- Tử Vi page upgraded to 3-col workbench: form + board + insight panel with "Xem workbench" preview, palace-select detail, star interpretation links.
+- Classics library: `src/lib/classics/types.ts`, `src/lib/classics/index.ts`, `src/lib/classics/data/cot-tuy-phu.ts`, `src/lib/classics/data/tu-vi-toan-thu.ts`.
+- Library pages: `/co-thu` hub with search, `/co-thu/[book]` reader with anchor-tagged chapters, search results linking to paragraph anchors.
+
+**Next planned Phase 19:** Classics ↔ knowledge star links + more classic books.
+- Add per-star links from classic paragraphs mentioning a star to knowledge pages.
+- Add more classic book data files (port from `ziwei-doushu/lib/classics/data/quanji.ts` and `quanshu.ts` style).
+- Add "Cổ thư" link in knowledge sidebar, maybe in Header.
+
+**Next planned Phase 20:** Chart board SVG highlight + deeper board interaction.
+- Draw 三方四正 lines between related palaces on workbench click.
+- Add star brightness/badge overlay on palace cells.
+- Add liunian (year) picker to TimeNav with year overlay.
+- Add link from board palaces to classic search.
+
 **Postponed (Phase 5, 8):**
 - Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres)
 - Phase 8: TBD feature discovery

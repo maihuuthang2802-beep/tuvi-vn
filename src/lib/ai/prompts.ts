@@ -1,7 +1,7 @@
 import { ReadingResult } from '@/lib/readings';
 
 export interface InterpretRequest {
-  service: 'tu-vi' | 'kinh-dich' | 'xin-xam' | 'tarot';
+  service: 'tu-vi' | 'hop-menh' | 'kinh-dich' | 'xin-xam' | 'tarot';
   reading: ReadingResult;
   question?: string;
   context?: Record<string, string>;
@@ -43,6 +43,18 @@ ${reading.details.map((d) => `- ${d}`).join('\n')}
 Question/Context: ${question || context?.question || 'General life guidance'}
 
 Provide a deep, poetic interpretation of this Tử Vi chart. Focus on the person's destiny indicators, current cycle themes, and what they should cultivate now. Be specific to their chart data.`;
+  }
+
+  if (service === 'hop-menh') {
+    return `Compatibility Reading:
+Title: ${reading.title}
+Summary: ${reading.summary}
+Details:
+${reading.details.map((d) => `- ${d}`).join('\n')}
+
+Question/Context: ${question || context?.question || 'Phân tích mức độ hòa hợp và hướng đi lâu dài'}
+
+Hãy luận giải hợp mệnh bằng tiếng Việt. Nêu rõ điểm hợp, điểm dễ va chạm, cách giao tiếp nên dùng, và điều cần quan sát trước khi cam kết dài lâu.`;
   }
 
   if (service === 'kinh-dich') {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { ZiweiChart } from '@/lib/ziwei/types';
 import type { ReadingResult } from '@/lib/readings';
 import { BRANCH_VI, PALACE_VI, SIHUA_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
+import { getStarSlugByName } from '@/lib/ziwei/knowledge';
 import { detectCachCuc, getStarDeepMeaning, analyzeCurrentDaXian } from '@/lib/ziwei/patterns';
 import { downloadPDF } from '@/lib/pdf';
 
@@ -40,6 +41,7 @@ export default function TuViResultClient({
   const currentDaXian = chart.daXians[chart.currentDaXianIndex];
   const sihua = ming?.stars.filter(s => s.siHua) || [];
   const patterns = detectCachCuc(chart);
+  const knowledgeStars = Array.from(new Set(chart.palaces.flatMap(p => p.stars.filter(s => s.type === 'major').map(s => s.name)))).map((name) => ({ name, slug: getStarSlugByName(viStars([name])) })).filter((item): item is { name: string; slug: string } => Boolean(item.slug)).slice(0, 6);
 
   const handleDownloadPDF = async () => {
     setDownloading(true);
@@ -109,6 +111,18 @@ export default function TuViResultClient({
                     ))}
                   </div>
                 </div>
+                {knowledgeStars.length ? (
+                  <div>
+                    <h3 className="text-[12px] uppercase tracking-[1px] text-gold/70 mb-2">Đọc sâu theo sao đang hiện</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {knowledgeStars.map((star) => (
+                        <Link key={star.name} href={`/tu-vi/kien-thuc/${star.slug}/overview`} className="rounded-full border border-gold/20 bg-tuvi-bg px-3 py-2 text-[12px] text-gold hover:opacity-90">
+                          {viStars([star.name])}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -129,12 +143,20 @@ export default function TuViResultClient({
                           {ming.stars
                             .filter(s => s.type === 'major')
                             .map(star => (
-                              <div key={star.name} className="rounded-lg border border-gold/20 bg-tuvi-bg/50 p-3">
-                                <p className="text-[13px] font-semibold text-gold">{viStars([star.name])}</p>
-                                <p className="mt-1 text-[12px] text-text-2">
-                                  {getStarDeepMeaning(star.name, ming.name)}
-                                </p>
-                              </div>
+                               <div key={star.name} className="rounded-lg border border-gold/20 bg-tuvi-bg/50 p-3">
+                                 <div className="flex items-start justify-between gap-3">
+                                   <p className="text-[13px] font-semibold text-gold">{viStars([star.name])}</p>
+                                   {getStarSlugByName(viStars([star.name])) ? (
+                                     <Link href={`/tu-vi/kien-thuc/${getStarSlugByName(viStars([star.name]))}/overview`} className="text-[11px] text-ai hover:underline">
+                                       Đọc sao
+                                     </Link>
+                                   ) : null}
+                                 </div>
+                                 <p className="mt-1 text-[12px] text-text-2">
+                                   {getStarDeepMeaning(star.name, ming.name)}
+                                 </p>
+                               </div>
+
                             ))}
                         </div>
                       ) : (
@@ -209,12 +231,14 @@ export default function TuViResultClient({
               </div>
             )}
 
-            {activeTab === 'palaces' && (
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                {chart.palaces.map(palace => {
-                  const mainStars = palace.stars.filter(s => s.type === 'major');
-                  return (
-                    <div
+             {activeTab === 'palaces' && (
+               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                 {chart.palaces.map(palace => {
+                   const mainStars = palace.stars.filter(s => s.type === 'major');
+                   const palaceKnowledgeLinks = mainStars.map((star) => ({ name: star.name, slug: getStarSlugByName(viStars([star.name])) })).filter((item): item is { name: string; slug: string } => Boolean(item.slug));
+                   return (
+                     <div
+
                       key={`${palace.branch}-${palace.name}`}
                       className={`rounded-[18px] border p-3 transition ${
                         palace.isMingGong
@@ -237,6 +261,15 @@ export default function TuViResultClient({
                       {palace.borrowedStars?.length ? (
                         <p className="mt-1 text-[11px] text-gold">Mượn: {viStars(palace.borrowedStars)}</p>
                       ) : null}
+                      {palaceKnowledgeLinks.length ? (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {palaceKnowledgeLinks.map((item) => (
+                            <Link key={`${palace.name}-${item.name}`} href={`/tu-vi/kien-thuc/${item.slug}/overview`} className="rounded-full border border-gold/20 bg-surface px-2 py-1 text-[10px] text-gold hover:opacity-90">
+                              Đọc {viStars([item.name])}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -246,6 +279,13 @@ export default function TuViResultClient({
         </div>
 
         <div className="space-y-4">
+          <section className="rounded-[24px] border border-border bg-surface p-5">
+            <div className="text-[11px] uppercase tracking-[2px] text-gold">Kiến thức liên quan</div>
+            <div className="mt-3 space-y-2">
+              <Link href="/tu-vi/kien-thuc" className="block rounded-[12px] border border-gold/20 bg-tuvi-bg px-4 py-3 text-center text-[13px] font-semibold text-gold">Mở kho kiến thức Tử Vi</Link>
+              <Link href="/tu-vi/hop-menh" className="block rounded-[12px] border border-[rgba(44,195,184,0.3)] bg-ai-bg px-4 py-3 text-center text-[13px] font-semibold text-ai">Xem hợp mệnh với lá số này</Link>
+            </div>
+          </section>
           <section className="rounded-[24px] border border-border bg-surface p-5">
             <div className="text-[11px] uppercase tracking-[2px] text-gold">Tải về</div>
             <p className="mt-2 text-[13px] text-text-3">

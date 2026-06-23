@@ -1,9 +1,10 @@
 import { castIChing } from '@/lib/iching/engine';
 import { generateChart } from '@/lib/ziwei/algorithm';
+import { analyzeCompatibility } from '@/lib/ziwei/compatibility';
 import { BRANCH_VI, PALACE_VI, STEM_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
 import { getXiXamLot, CATEGORY_VI, CATEGORY_MEANINGS } from '@/lib/xixam/lots';
 
-export type ServiceKey = 'tu-vi' | 'kinh-dich' | 'xin-xam' | 'tarot';
+export type ServiceKey = 'tu-vi' | 'hop-menh' | 'kinh-dich' | 'xin-xam' | 'tarot';
 
 export interface ReadingInput {
   service: ServiceKey;
@@ -149,6 +150,42 @@ export function createReading(input: ReadingInput): ReadingResult {
         currentDaXian ? `Đại hạn hiện tại: ${currentDaXian.startAge}-${currentDaXian.endAge} tại cung ${PALACE_VI[currentDaXian.palaceName] || currentDaXian.palaceName}.` : 'Chưa xác định đại hạn hiện tại.',
       ],
       advice: 'Dùng lá số thật làm dữ liệu nền; tầng AI/RAG tiếp theo sẽ diễn giải sâu theo từng cung, tam phương tứ chính và đại hạn.',
+    };
+  }
+
+  if (input.service === 'hop-menh') {
+    const birthDateA = input.birthDate ? new Date(input.birthDate) : new Date('1995-01-01');
+    const birthDateB = input.datetime ? new Date(input.datetime) : new Date('1996-01-01');
+    const longitudeA = typeof input.longitude === 'number' ? input.longitude : 105.85;
+    const longitudeB = typeof input.method === 'string' ? Number(input.method) || 105.85 : 105.85;
+    const chartA = generateChart({
+      year: birthDateA.getFullYear(),
+      month: birthDateA.getMonth() + 1,
+      day: birthDateA.getDate(),
+      hour: trueSolarBranch(input.birthTime, longitudeA),
+      gender: input.gender === 'female' ? 'female' : 'male',
+      name: input.name || 'Người A',
+      province: input.province,
+      city: input.city,
+      longitude: longitudeA,
+    });
+    const chartB = generateChart({
+      year: birthDateB.getFullYear(),
+      month: birthDateB.getMonth() + 1,
+      day: birthDateB.getDate(),
+      hour: trueSolarBranch(input.objectName, longitudeB),
+      gender: input.spread === '1' ? 'female' : 'male',
+      name: input.question || 'Người B',
+      province: input.method,
+      city: input.objectName ? input.objectName.split('|')[0] : undefined,
+      longitude: longitudeB,
+    });
+    const analysis = analyzeCompatibility(chartA, chartB);
+    return {
+      title: `Hợp mệnh: ${chartA.birthInfo.name || 'Người A'} & ${chartB.birthInfo.name || 'Người B'}`,
+      summary: `${analysis.level} · ${analysis.score}/100. ${analysis.summary}`,
+      details: analysis.details.concat(analysis.axes.map((axis) => `${axis.label}: ${axis.score}/100 — ${axis.summary}`)),
+      advice: analysis.advice.join(' '),
     };
   }
 
