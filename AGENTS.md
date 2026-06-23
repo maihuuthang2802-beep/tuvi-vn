@@ -227,6 +227,8 @@ Files shipped:
 - A real test account was created during verification (`testuser1@example.com` / `Test User`) — left in the Supabase `User` table; delete it if you don't want test data sitting there.
 - Unrelated but noticed in `.env`: a `GITHUB_TOKEN` is sitting there in plaintext. Not touched (out of scope), but worth rotating/removing if it's a real live token and this `.env` could ever leak.
 
+**Fixed (Jun 2026): Vercel build failed — `Module not found: Can't resolve '@/generated/prisma/client'`.** Root cause: `src/generated/prisma` (Prisma 7's client output dir) is gitignored by design (generated code, shouldn't be committed), so it only exists locally because `npx prisma generate` was run manually. Vercel's build never ran that command, so the import in `src/lib/prisma.ts` resolved to nothing. Fix: added `"postinstall": "prisma generate"` and changed `"build"` to `"prisma generate && next build"` in `package.json` (belt-and-suspenders — postinstall covers the normal install step, the explicit build-script call covers cached-`node_modules` cases where postinstall might get skipped). Verified locally by deleting `src/generated` and `.next` and rebuilding from scratch — passes.
+
 **Postponed (Phase 8):**
 - Phase 8: TBD feature discovery
 
