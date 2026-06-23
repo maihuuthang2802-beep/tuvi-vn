@@ -197,7 +197,7 @@ Files shipped:
 - No streaming; waits for full response (UX: "Đang tạo luận giải...")
 - No caching; every tab click re-fetches (future: add Redis cache)
 
-## PDF Generation (Phase 7)
+## PDF Generation (Phase 7) 
 
 **Setup:**
 - Install pdfkit: `npm install pdfkit @types/pdfkit`
