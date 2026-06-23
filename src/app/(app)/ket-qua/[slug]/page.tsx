@@ -8,6 +8,7 @@ import { castIChing } from '@/lib/iching/engine';
 import { PROVINCES } from '@/lib/ziwei/cities';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import { resolveBirthHour } from '@/lib/ziwei/true-solar';
+import { saveHistoryEntry } from '@/lib/history';
 
 const HOURS = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
@@ -34,7 +35,7 @@ function getLocation(provinceName: string | undefined, cityName: string | undefi
   return { province: province.name, city: city.name, longitude: Number.isFinite(longitude) ? longitude : city.longitude };
 }
 
-function renderTuVi(params: Record<string, string | undefined>) {
+async function renderTuVi(params: Record<string, string | undefined>) {
   const location = getLocation(params.province, params.city, params.longitude);
   const paywallHref = buildPlanHref('tu-vi', params);
   const unlocked = params.upgraded === '1';
@@ -68,10 +69,12 @@ function renderTuVi(params: Record<string, string | undefined>) {
     longitude: location.longitude,
   });
 
+  await saveHistoryEntry('tu-vi', result.title, result.summary, { branch: hourIndex, dateStr });
+
   return <TuViResultClient result={result} chart={chart} params={params} unlocked={unlocked} paywallHref={paywallHref} />;
 }
 
-function renderHopMenh(params: Record<string, string | undefined>) {
+async function renderHopMenh(params: Record<string, string | undefined>) {
   const locationA = getLocation(params.aProvince, params.aCity, params.aLongitude);
   const locationB = getLocation(params.bProvince, params.bCity, params.bLongitude);
   const paywallHref = buildPlanHref('hop-menh', params);
@@ -123,16 +126,21 @@ function renderHopMenh(params: Record<string, string | undefined>) {
       : analysis.details.concat(analysis.axes.map((axis) => `${axis.label}: ${axis.score}/100 — ${axis.summary}`)),
     advice: analysis.advice.join(' '),
   };
+  await saveHistoryEntry('hop-menh', result.title, result.summary, { score: analysis.score, level: analysis.level });
+
   return <HopMenhResultClient result={result} analysis={analysis} chartA={chartA} chartB={chartB} params={params} unlocked={unlocked} paywallHref={paywallHref} />;
 }
 
-function renderBasicResult(service: 'kinh-dich' | 'xin-xam' | 'tarot', params: Record<string, string | undefined>) {
+async function renderBasicResult(service: 'kinh-dich' | 'xin-xam' | 'tarot', params: Record<string, string | undefined>) {
   const result = createReading({ service, question: params.question, spread: params.spread as '1' | '3' | undefined, method: params.method as 'luchao' | 'thieny' | 'maihoa' | undefined, objectName: params.objectName, datetime: params.datetime });
   const reading = service === 'kinh-dich' ? castIChing({ method: params.method as 'luchao' | 'thieny' | 'maihoa' | undefined, question: params.question, objectName: params.objectName, datetime: params.datetime }) : null;
   const tarotDraws = service === 'tarot' ? drawTarotCards(params.question?.trim() || 'Trải bài tổng quan hiện tại', params.spread === '1' ? '1' : '3') : null;
   const methodLabel = params.method === 'thieny' ? 'Thiên Ý' : params.method === 'maihoa' ? 'Mai Hoa' : 'Lục Hào';
   const paywallHref = buildPlanHref(service, params);
   const unlocked = params.upgraded === '1';
+
+  await saveHistoryEntry(service, result.title, result.summary, { methodLabel });
+
   return (
     <BasicResultClient service={service} result={result} reading={reading} tarotDraws={tarotDraws} methodLabel={methodLabel} params={params} unlocked={unlocked} paywallHref={paywallHref} />
   );
@@ -148,7 +156,7 @@ export default async function ResultPage({ params, searchParams }: { params: Pro
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon={meta.icon} title={meta.title} subtitle={meta.subtitle} accent={meta.accent} />
-      {service === 'tu-vi' ? renderTuVi(flatParams) : service === 'hop-menh' ? renderHopMenh(flatParams) : renderBasicResult(service === 'kinh-dich' ? 'kinh-dich' : service === 'xin-xam' ? 'xin-xam' : 'tarot', flatParams)}
+      {service === 'tu-vi' ? await renderTuVi(flatParams) : service === 'hop-menh' ? await renderHopMenh(flatParams) : await renderBasicResult(service === 'kinh-dich' ? 'kinh-dich' : service === 'xin-xam' ? 'xin-xam' : 'tarot', flatParams)}
     </main>
   );
 }

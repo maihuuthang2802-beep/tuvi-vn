@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const navLinks = [
     { href: '/tu-vi', label: 'Tử Vi' },
@@ -47,46 +49,49 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="relative hidden md:block">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-text-2 hover:text-gold transition-colors"
-              aria-label="Profile menu"
+          {session?.user ? (
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-text-2 hover:text-gold transition-colors"
+                aria-label="Profile menu"
+              >
+                👤
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-[12px] border border-border bg-surface shadow-lg overflow-hidden">
+                  <div className="px-4 py-3 text-[12px] text-text-3 border-b border-border truncate">{session.user.email}</div>
+                  <Link
+                    href="/ca-nhan"
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors"
+                  >
+                    Cá nhân
+                  </Link>
+                  <Link
+                    href="/lich-su"
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors border-t border-border"
+                  >
+                    Lịch sử
+                  </Link>
+                  <button
+                    onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/' }); }}
+                    className="w-full px-4 py-3 text-left text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors border-t border-border"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/dang-nhap"
+              className="hidden rounded-[12px] border border-border bg-surface px-[14px] py-[7px] text-[13px] font-semibold text-gold transition-colors hover:border-gold md:block"
             >
-              👤
-            </button>
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-[12px] border border-border bg-surface shadow-lg overflow-hidden">
-                <Link
-                  href="/ca-nhan"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors"
-                >
-                  Cá nhân
-                </Link>
-                <Link
-                  href="/lich-su"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-3 text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors border-t border-border"
-                >
-                  Lịch sử
-                </Link>
-                <button
-                  onClick={() => setProfileOpen(false)}
-                  className="w-full px-4 py-3 text-left text-[14px] text-text hover:bg-surface-3 hover:text-gold transition-colors border-t border-border"
-                >
-                  Đăng xuất
-                </button>
-              </div>
-            )}
-          </div>
-
-          <Link
-            href="/login"
-            className="hidden rounded-[12px] border border-border bg-surface px-[14px] py-[7px] text-[13px] font-semibold text-gold transition-colors hover:border-gold md:block"
-          >
-            Đăng nhập
-          </Link>
+              Đăng nhập
+            </Link>
+          )}
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -117,13 +122,21 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="border-t border-border py-3 text-[14px] font-medium text-gold hover:text-gold-light"
-            >
-              Đăng nhập
-            </Link>
+            {session?.user ? (
+              <>
+                <Link href="/ca-nhan" onClick={() => setMobileMenuOpen(false)} className="border-t border-border py-3 text-[14px] font-medium text-text-2 hover:text-gold">Cá nhân</Link>
+                <Link href="/lich-su" onClick={() => setMobileMenuOpen(false)} className="py-3 text-[14px] font-medium text-text-2 hover:text-gold">Lịch sử</Link>
+                <button onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/' }); }} className="py-3 text-left text-[14px] font-medium text-gold hover:text-gold-light">Đăng xuất</button>
+              </>
+            ) : (
+              <Link
+                href="/dang-nhap"
+                onClick={() => setMobileMenuOpen(false)}
+                className="border-t border-border py-3 text-[14px] font-medium text-gold hover:text-gold-light"
+              >
+                Đăng nhập
+              </Link>
+            )}
           </nav>
         </div>
       )}

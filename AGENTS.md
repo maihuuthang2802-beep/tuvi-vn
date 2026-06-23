@@ -208,8 +208,26 @@ Fix: rewrote `svg-generator.ts` to generate inline SVG directly from the real dr
 
 **Next planned Phase 24:** TBD — candidates: famous-person example charts (if legal framing resolved), classics full-text depth pass, or new feature discovery.
 
-**Postponed (Phase 5, 8):**
-- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres)
+**Completed Phase 5: Auth + Payment + DB (Jun 2026).** Real Auth.js (next-auth v5) credentials auth + real Postgres (Supabase) via Prisma 7. Payment kept mock but abstracted behind a provider interface (user explicitly chose this scope — no real PayOS/Stripe account yet).
+
+Files shipped:
+- `prisma/schema.prisma`: `User` (id/email/passwordHash/name/plan) + `ReadingHistoryEntry` (userId/service/title/summary/payload Json), Prisma 7's new `prisma-client` generator outputting to `src/generated/prisma` (gitignored).
+- `src/lib/prisma.ts`: singleton client using `@prisma/adapter-pg` driver adapter — Prisma 7's new client generator requires an explicit adapter, no longer auto-connects from `DATABASE_URL` alone.
+- `src/auth.ts`: Auth.js v5 config, `CredentialsProvider` verifying email+bcrypt-hashed password against Prisma, JWT session strategy (no DB sessions needed for credentials-only auth), `session.user.id` exposed via callbacks. Type augmentation in `src/types/next-auth.d.ts`.
+- `src/app/api/auth/[...nextauth]/route.ts` (catch-all handler) + `src/app/api/auth/signup/route.ts` (hashes password, creates `User`). Deleted the old mock `src/app/api/auth/route.ts` (dead, unreferenced) and the old mock `src/app/api/history/route.ts` (also dead — history is now a direct Prisma query in the page).
+- `src/app/(app)/dang-nhap/page.tsx` + `src/app/(app)/dang-ky/page.tsx`: real login/signup forms calling `signIn('credentials', ...)` / the signup endpoint. (`useSearchParams` requires a `<Suspense>` wrapper in this Next version or the build fails — wrapped accordingly.)
+- `src/app/(app)/ca-nhan/page.tsx` + `src/app/(app)/lich-su/page.tsx`: were placeholder `redirect('/')` stubs (Phase 11b) — now real server components, `auth()`-gated, querying Prisma directly. Sign-out uses a `'use server'`-directive inline action (a plain async arrow function passed to `<form action={...}>` throws "Functions cannot be passed directly to Client Components" in this Next version — must be a named function with the `'use server'` directive inside its body).
+- `src/components/auth/SessionProviderClient.tsx`: wraps `(app)/layout.tsx` so `Header.tsx` can use `useSession()`/`signOut()` client-side; replaced the old dead `/login` links (a route that never existed) with `/dang-nhap`, and the static profile dropdown now reflects real session state.
+- `src/lib/history.ts`: `saveHistoryEntry()` called from `ket-qua/[slug]/page.tsx` for tu-vi/hop-menh/kinh-dich/xin-xam/tarot after building each reading — best-effort (wrapped in try/catch so a DB hiccup never breaks the result page), no-ops silently if not logged in.
+- `src/lib/payment/provider.ts`: `PaymentProvider` interface + `getPaymentProvider()` (env `PAYMENT_PROVIDER`, defaults/falls back to mock); `src/app/api/checkout/route.ts` refactored to call it instead of inlining the mock logic — ready to add a `payos`/`stripe` branch later without touching the route.
+
+**Infra notes for whoever deploys this:**
+- DB is Supabase Postgres. The **direct connection** host (`db.<ref>.supabase.co:5432`) failed with `P1001` in this environment (likely needs IPv6). The **transaction pooler** (port 6543) connected at the TCP level but `prisma db push`/`migrate dev` hung indefinitely against it — PgBouncer transaction-mode pooling is known to break Prisma's migration commands (no prepared statements/session features). What worked: the **session pooler**, same `*.pooler.supabase.com` host but **port 5432**. Use that one for `DATABASE_URL` (migrations need it; the transaction pooler on 6543 would be the normal choice for serverless app runtime query traffic if connection limits become an issue later, but isn't required for this app's current scale).
+- `AUTH_SECRET` in `.env` is currently a placeholder dev value (`dev-only-change-this-before-deploying-to-production-...`) — **must** be replaced with a real random secret (`npx auth secret` or `openssl rand -base64 32`) before any production deploy.
+- A real test account was created during verification (`testuser1@example.com` / `Test User`) — left in the Supabase `User` table; delete it if you don't want test data sitting there.
+- Unrelated but noticed in `.env`: a `GITHUB_TOKEN` is sitting there in plaintext. Not touched (out of scope), but worth rotating/removing if it's a real live token and this `.env` could ever leak.
+
+**Postponed (Phase 8):**
 - Phase 8: TBD feature discovery
 
 ## Git/deploy
