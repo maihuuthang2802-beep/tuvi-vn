@@ -18,9 +18,13 @@ export default function TuViPage() {
   const [province, setProvince] = useState(DEFAULT_PROVINCE.name);
   const [city, setCity] = useState(DEFAULT_CITY.name);
   const [longitude, setLongitude] = useState(DEFAULT_CITY.longitude);
-  const [openProvince, setOpenProvince] = useState(false);
-  const [query, setQuery] = useState('');
-  const locationOptions = useMemo(() => PROVINCES.flatMap((item) => item.cities.map((cityItem) => ({ province: item.name, city: cityItem.name, longitude: cityItem.longitude, label: `${item.name} • ${cityItem.name}` }))).filter((item) => item.label.toLowerCase().includes(query.toLowerCase())), [query]);
+  const [pickerStep, setPickerStep] = useState<'closed' | 'province' | 'city'>('closed');
+  const [provinceQuery, setProvinceQuery] = useState('');
+  const [cityQuery, setCityQuery] = useState('');
+  
+  const filteredProvinces = useMemo(() => PROVINCES.filter((p) => p.name.toLowerCase().includes(provinceQuery.toLowerCase())), [provinceQuery]);
+  const currentProvince = PROVINCES.find((p) => p.name === province);
+  const filteredCities = useMemo(() => currentProvince?.cities.filter((c) => c.name.toLowerCase().includes(cityQuery.toLowerCase())) ?? [], [currentProvince, cityQuery]);
 
   return (
     <main className="page-enter pb-10">
@@ -61,7 +65,7 @@ export default function TuViPage() {
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">TỈNH/THÀNH</label>
-            <button type="button" onClick={() => setOpenProvince(true)} className="mt-2 flex w-full items-center justify-between rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-left text-[15px] text-text">
+            <button type="button" onClick={() => { setProvinceQuery(''); setPickerStep('province'); }} className="mt-2 flex w-full items-center justify-between rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-left text-[15px] text-text">
               <span>
                 <span className="block">{province}</span>
                 <span className="mt-1 block text-[12px] text-text-2">{city} · {longitude.toFixed(2)}°Đ</span>
@@ -92,25 +96,41 @@ export default function TuViPage() {
         </div>
       </section>
 
-      <BottomSheet open={openProvince} title="Chọn Tỉnh / Thành" onClose={() => setOpenProvince(false)}>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} className="sticky top-0 mb-3 w-full rounded-[12px] border border-border bg-surface-2 px-[14px] py-[10px] text-[14px] text-text outline-none" placeholder="Tìm tỉnh hoặc thành phố..." />
+      <BottomSheet open={pickerStep === 'province'} title="Chọn Tỉnh / Thành Phố" onClose={() => setPickerStep('closed')}>
+        <input value={provinceQuery} onChange={(e) => setProvinceQuery(e.target.value)} className="sticky top-0 mb-3 w-full rounded-[12px] border border-border bg-surface-2 px-[14px] py-[10px] text-[14px] text-text outline-none" placeholder="Tìm tỉnh..." />
+        <div>
+          {filteredProvinces.map((prov) => (
+            <button key={prov.name} type="button" onClick={() => { setProvince(prov.name); setCity(prov.cities[0].name); setLongitude(prov.cities[0].longitude); setPickerStep('city'); setCityQuery(''); }} className={`flex w-full items-center justify-between border-b border-border-2 px-5 py-3 text-left text-[15px] ${province === prov.name ? 'bg-tuvi-bg text-gold font-semibold' : 'text-text hover:bg-surface-2'}`}>
+              <span>{prov.name}</span>
+              <span className="text-[12px] text-text-2">{prov.cities.length} TP</span>
+            </button>
+          ))}
+           {!filteredProvinces.length && <div className="px-5 py-4 text-[14px] text-text-2">Không tìm thấy &quot;{provinceQuery}&quot;</div>}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={pickerStep === 'city'} title={`Chọn Thành Phố • ${province}`} onClose={() => setPickerStep('closed')}>
+        <div className="mb-3 flex items-center gap-2">
+          <button type="button" onClick={() => setPickerStep('province')} className="rounded-[8px] border border-border bg-surface-2 px-3 py-1 text-[12px] text-text-2 hover:text-text">← Quay lại</button>
+          <input value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} className="flex-1 rounded-[12px] border border-border bg-surface-2 px-[14px] py-[10px] text-[14px] text-text outline-none" placeholder="Tìm thành phố..." />
+        </div>
         <div className="mb-3 rounded-[16px] border border-gold/15 bg-tuvi-bg px-4 py-3 text-[13px] text-text-2">
-          Dùng điểm sinh cấp thành phố để hiệu chỉnh giờ mặt trời thật. Kinh độ hiện dùng cho lá số: <span className="font-semibold text-gold">{longitude.toFixed(2)}°Đ</span>
+          Kinh độ dùng cho lá số: <span className="font-semibold text-gold">{longitude.toFixed(2)}°Đ</span>
         </div>
         <div>
-          {locationOptions.map((item) => {
-            const active = province === item.province && city === item.city;
+          {filteredCities.map((c) => {
+            const active = city === c.name;
             return (
-              <button key={item.label} onClick={() => { setProvince(item.province); setCity(item.city); setLongitude(item.longitude); setOpenProvince(false); }} className={`flex w-full items-center justify-between border-b border-border-2 px-5 py-3 text-left ${active ? 'bg-tuvi-bg text-gold font-semibold' : 'text-text'}`}>
+              <button key={c.name} type="button" onClick={() => { setCity(c.name); setLongitude(c.longitude); setPickerStep('closed'); }} className={`flex w-full items-center justify-between border-b border-border-2 px-5 py-3 text-left ${active ? 'bg-tuvi-bg text-gold font-semibold' : 'text-text hover:bg-surface-2'}`}>
                 <span>
-                  <span className="block text-[15px]">{item.city}</span>
-                  <span className="mt-1 block text-[12px] text-text-2">{item.province} · {item.longitude.toFixed(2)}°Đ</span>
+                  <span className="block text-[15px]">{c.name}</span>
+                  <span className="mt-1 block text-[12px] text-text-2">{c.longitude.toFixed(2)}°Đ</span>
                 </span>
                 <span>{active ? '✓' : ''}</span>
               </button>
             );
           })}
-          {!locationOptions.length && <div className="px-5 py-4 text-[14px] text-text-2">Không tìm thấy “{query}”</div>}
+           {!filteredCities.length && <div className="px-5 py-4 text-[14px] text-text-2">Không tìm thấy &quot;{cityQuery}&quot;</div>}
         </div>
       </BottomSheet>
     </main>

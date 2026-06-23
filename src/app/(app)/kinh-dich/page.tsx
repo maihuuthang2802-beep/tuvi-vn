@@ -10,8 +10,6 @@ const methods = [
   { key: 'maihoa', icon: '✿', title: 'Mai Hoa', desc: 'Theo giờ, ngày, tháng, năm' },
 ] as const;
 
-const lineMap = ['— —', '——', '— —', '——'] as const;
-
 export default function KinhDichPage() {
   const [active, setActive] = useState<(typeof methods)[number]['key']>('luchao');
   const [step, setStep] = useState(1);
@@ -27,6 +25,15 @@ export default function KinhDichPage() {
     return question.trim() || `Kinh Dịch - ${activeMethod.title}`;
   }, [active, activeMethod.title, maiHoaTime, objectName, question]);
 
+  const hexagramSeed = useMemo(() => {
+    if (lines.length !== 6) return undefined;
+    let seed = 0;
+    lines.forEach((line, i) => {
+      if (line === '——') seed |= (1 << i);
+    });
+    return seed;
+  }, [lines]);
+
   function resetLucHao(nextMethod: (typeof methods)[number]['key']) {
     setActive(nextMethod);
     setStep(1);
@@ -35,12 +42,16 @@ export default function KinhDichPage() {
   }
 
   function castLine() {
-    if (flipping) return;
+    if (flipping || step > 6) return;
     setFlipping(true);
     window.setTimeout(() => {
-      const line = lineMap[Math.floor(Math.random() * lineMap.length)];
-      setLines((prev) => prev.length >= 6 ? [line] : [line, ...prev]);
-      setStep((prev) => prev >= 6 ? 1 : prev + 1);
+      const coin1 = Math.floor(Math.random() * 2);
+      const coin2 = Math.floor(Math.random() * 2);
+      const coin3 = Math.floor(Math.random() * 2);
+      const sum = (coin1 + coin2 + coin3 + 2) * 2;
+      const newLine = sum % 2 === 0 ? '— —' : '——';
+      setLines((prev) => [newLine, ...prev]);
+      setStep((prev) => prev + 1);
       setFlipping(false);
     }, 450);
   }
@@ -62,6 +73,7 @@ export default function KinhDichPage() {
         <input type="hidden" name="question" value={active === 'thieny' ? question : derivedQuestion} />
         <input type="hidden" name="objectName" value={objectName} />
         <input type="hidden" name="datetime" value={maiHoaTime} />
+        {hexagramSeed !== undefined && <input type="hidden" name="hexagramSeed" value={hexagramSeed} />}
         <div className="rounded-[18px] border border-kinh/20 bg-kinh-bg p-4 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-kinh">Flow đang dùng</div>
           <div className="mt-2 font-semibold text-text">{activeMethod.title}</div>

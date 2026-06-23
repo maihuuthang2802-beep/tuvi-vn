@@ -65,6 +65,8 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Interactive animations: coin flip, tube shake, card flip 3D, glow pulse, page-enter fade.
 
 ## Current limitations / TODO
+
+**Completed phases:**
 - Phase 1 done: premium gating flow across `src/app/(app)/ket-qua/[slug]/page.tsx`, `src/app/(app)/goi-dich-vu/page.tsx`, and `src/app/api/checkout/route.ts`.
 - Phase 2 done: Kinh Dịch form/result now pass `method`, `objectName`, `datetime`; engine returns method detail, quẻ chủ/quẻ biến, hào động, and six-line summaries.
 - Phase 3 done: Tarot form/result now support spread `1` or `3`; result page renders deterministic 78-card draws with reversed state.
@@ -73,13 +75,21 @@ Vietnamese spiritual services MVP for Vercel deployment.
 - Phase 7 done: PDF report generation via pdfkit; `/api/pdf/generate` endpoint; result pages have "PDF Report" download button.
 - Phase 9 done: Tử Vi deeper output — interactive 5-tab UI (Tổng quan, Cung Mệnh, Đại Hạn, Tứ Hóa, Các Cung); cách cục pattern detection (Tử Tương, Cơ Âm, Dương Lương, v.v); deeper star meanings; current DaXian analysis.
 - Phase 10 done: Tarot card images — SVG generative cards from `src/lib/tarot/svg-generator`; TarotCard component with image/detail toggle; graceful fallback if SVG missing.
-- Verification baseline for these phases: `npm run lint` and `npm run build` both passed after each phase.
+- Phase 11 done: Header desktop nav (md: horizontal links, mobile: burger menu drawer).
+- Phase 11b done: Placeholder page redirects (lich-van-nien, ca-nhan, lich-su → /).
+- Phase 12 done: 2-step province/city picker (63 provinces → cities, search per-step, longitude display).
+- Phase 13 done: Real 3-coin flip (yin/yang lines), hexagram seed encoded, passed to backend.
+- Phase 14 done: Footer with service links, legal links, social icons, disclaimer, copyright.
+- Phase 15 done: Profile dropdown menu (Cá nhân, Lịch sử, Đăng xuất).
+- Phase 16 done: Accessibility (focus rings, reduced-motion)
 
-**Remaining phases:**
-- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres) — postponed.
-- Phase 8: TBD (placeholder).
+**Verification baseline:** `npm run lint` and `npm run build` both passed after each phase.
 
-Recommended next: Phase 5 (auth/payment/database) or Phase 8 (TBD feature discovery).
+## Remaining work (Priority order)
+
+Postponed (Phase 5, 8):
+- Phase 5: Auth + Payment + DB (NextAuth, PayOS/Stripe, Vercel Postgres) — after Phase 11-16 complete
+- Phase 8: TBD feature discovery
 
 ## Git/deploy
 - GitHub repo: `https://github.com/maihuuthang2802-beep/tuvi-vn`
