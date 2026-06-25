@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { generateTarotSvg } from '@/lib/tarot/svg-generator';
 
 interface TarotCardProps {
@@ -27,7 +27,10 @@ export default function TarotCard({
   index = 0,
 }: TarotCardProps) {
   const [showImage, setShowImage] = useState(true);
-  const cardSvg = generateTarotSvg({ name, arcana: arcana === 'minor' ? 'minor' : 'major', suit, reversed: false });
+  const cardSvg = useMemo(
+    () => generateTarotSvg({ name, arcana: arcana === 'minor' ? 'minor' : 'major', suit, reversed: false }),
+    [name, arcana, suit]
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -39,13 +42,17 @@ export default function TarotCard({
         {showImage && (
           <div className="relative w-full aspect-[3/4] mb-3 rounded-lg overflow-hidden border border-tarot/30 bg-surface">
             <div
-              className={`h-full w-full transition-transform group-hover:scale-105 ${reversed ? 'rotate-180' : ''}`}
+              className={`h-full w-full transition-transform duration-200 ease-out ${reversed ? 'rotate-180' : ''}`}
+              style={{
+                transformOrigin: 'center center',
+                willChange: 'transform',
+              }}
               dangerouslySetInnerHTML={{ __html: cardSvg }}
             />
             <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-[10px] text-tarot">
               {reversed ? 'Ngược' : 'Xuôi'}
             </div>
-          </div>
+            </div>
         )}
 
         {/* Card Info */}

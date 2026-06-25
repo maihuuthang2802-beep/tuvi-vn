@@ -33,6 +33,11 @@ export default function TuViPage() {
   const [view, setView] = useState<TimeView>('mingpan');
   const [highlightBranch, setHighlightBranch] = useState<number | null>(null);
   const [liunianYear, setLiunianYear] = useState<number | null>(null);
+  const [birthDate, setBirthDate] = useState('');
+  const [birthDateError, setBirthDateError] = useState('');
+
+  const today = new Date().toISOString().split('T')[0];
+  const minDate = '1900-01-01';
 
   const [clockHourText, clockMinuteText] = clockTime.split(':');
   const trueSolarHourPreview = calcTrueSolarBranch(Number(clockHourText) || 0, Number(clockMinuteText) || 0, longitude);
@@ -68,13 +73,37 @@ export default function TuViPage() {
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">NGÀY SINH</label>
-            <input name="birthDate" type="date" className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" />
+            <input
+              name="birthDate"
+              type="date"
+              value={birthDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                setBirthDate(val);
+                if (val) {
+                  if (val > today) {
+                    setBirthDateError('Ngày sinh không được ở tương lai');
+                  } else if (val < minDate) {
+                    setBirthDateError('Ngày sinh phải từ năm 1900 trở đi');
+                  } else {
+                    setBirthDateError('');
+                  }
+                }
+              }}
+              max={today}
+              min={minDate}
+              className={`mt-2 w-full rounded-[12px] border bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg ${
+                birthDateError ? 'border-red-400' : 'border-border-2'
+              }`}
+            />
+            {birthDateError && <p className="mt-1 text-[12px] text-red-400">{birthDateError}</p>}
             <div className="mt-3 flex gap-2">
               {(['Dương lịch', 'Âm lịch'] as const).map((item) => (
                 <button key={item} type="button" onClick={() => setCalendar(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${calendar === item ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{item}</button>
               ))}
             </div>
             <input type="hidden" name="calendar" value={calendar} />
+            <input type="hidden" name="birthDate" value={birthDate} />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
@@ -124,7 +153,7 @@ export default function TuViPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <button type="button" onClick={previewChart} className="rounded-[14px] border border-gold/20 bg-tuvi-bg px-4 py-[14px] text-[15px] font-bold text-gold">Xem workbench</button>
-            <button className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-[14px] text-[15px] font-bold text-bg">Lập Lá Số →</button>
+            <button disabled={!birthDate || !!birthDateError} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-[14px] text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">Lập Lá Số →</button>
           </div>
           <Link href="/co-thu" className="block rounded-[14px] border border-border bg-surface-2 px-4 py-3 text-center text-[14px] font-semibold text-text">Mở thư viện cổ thư</Link>
         </form>

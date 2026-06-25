@@ -30,6 +30,12 @@ function PersonForm({
   city,
   longitude,
   openPicker,
+  birthDate,
+  setBirthDate,
+  birthDateError,
+  setBirthDateError,
+  maxDate,
+  minDate,
 }: {
   prefix: PersonKey;
   title: string;
@@ -46,6 +52,12 @@ function PersonForm({
   city: string;
   longitude: number;
   openPicker: () => void;
+  birthDate: string;
+  setBirthDate: (value: string) => void;
+  birthDateError: string;
+  setBirthDateError: (value: string) => void;
+  maxDate: string;
+  minDate: string;
 }) {
   const [clockHourText, clockMinuteText] = clockTime.split(':');
   const trueSolarHourPreview = calcTrueSolarBranch(Number(clockHourText) || 0, Number(clockMinuteText) || 0, longitude);
@@ -59,7 +71,28 @@ function PersonForm({
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">NGÀY SINH</label>
-          <input name={`${prefix}BirthDate`} type="date" className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none" />
+          <input
+            name={`${prefix}BirthDate`}
+            type="date"
+            value={birthDate}
+            onChange={(e) => {
+              const val = e.target.value;
+              setBirthDate(val);
+              if (val) {
+                if (val > maxDate) {
+                  setBirthDateError('Ngày sinh không được ở tương lai');
+                } else if (val < minDate) {
+                  setBirthDateError('Ngày sinh phải từ năm 1900 trở đi');
+                } else {
+                  setBirthDateError('');
+                }
+              }
+            }}
+            max={maxDate}
+            min={minDate}
+            className={`mt-2 w-full rounded-[12px] border bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none ${birthDateError ? 'border-red-400' : 'border-border-2'}`}
+          />
+          {birthDateError && <p className="mt-1 text-[12px] text-red-400">{birthDateError}</p>}
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
@@ -128,6 +161,13 @@ export default function HopMenhPage() {
   const [picker, setPicker] = useState<PickerState>({ person: 'a', step: 'closed' });
   const [provinceQuery, setProvinceQuery] = useState('');
   const [cityQuery, setCityQuery] = useState('');
+  const [birthDateA, setBirthDateA] = useState('');
+  const [birthDateB, setBirthDateB] = useState('');
+  const [birthDateErrorA, setBirthDateErrorA] = useState('');
+  const [birthDateErrorB, setBirthDateErrorB] = useState('');
+
+  const today = new Date().toISOString().split('T')[0];
+  const minDate = '1900-01-01';
 
   const currentProvinceName = picker.person === 'a' ? provinceA : provinceB;
   const currentProvince = PROVINCES.find((item) => item.name === currentProvinceName) || DEFAULT_PROVINCE;
@@ -151,15 +191,15 @@ export default function HopMenhPage() {
       <ModuleHero icon="◎" title="Hợp Mệnh Tử Vi" subtitle="Đối chiếu hai lá số · Mệnh, Phu thê, Phúc đức, Đại hạn" accent="var(--color-tuvi)" />
       <form action="/ket-qua/hop-menh" className="mx-5 mt-5 space-y-5 md:mx-auto md:max-w-[1100px]">
         <div className="grid gap-5 md:grid-cols-2">
-          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} />
-          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} />
+          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} birthDate={birthDateA} setBirthDate={setBirthDateA} birthDateError={birthDateErrorA} setBirthDateError={setBirthDateErrorA} maxDate={today} minDate={minDate} />
+          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} birthDate={birthDateB} setBirthDate={setBirthDateB} birthDateError={birthDateErrorB} setBirthDateError={setBirthDateErrorB} maxDate={today} minDate={minDate} />
         </div>
         <div className="rounded-[20px] border border-gold/15 bg-tuvi-bg p-5 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-gold">Phạm vi đối chiếu</div>
           <div className="mt-3">MVP hiện đối chiếu Mệnh, Phu thê, Phúc đức, tứ hóa nổi bật và đại hạn hiện tại. Kết quả miễn phí cho điểm hợp và 4 trục chính. Gói mở rộng mở thêm breakdown sâu.</div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <button className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-4 text-[15px] font-bold text-bg">Xem hợp mệnh →</button>
+          <button disabled={!birthDateA || !birthDateB || !!birthDateErrorA || !!birthDateErrorB} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-4 text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">Xem hợp mệnh →</button>
           <Link href="/tu-vi/kien-thuc" className="rounded-[14px] border border-gold/20 bg-surface px-4 py-4 text-center text-[15px] font-semibold text-gold">Xem kho kiến thức Tử Vi</Link>
         </div>
       </form>
