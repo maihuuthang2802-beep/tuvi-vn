@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ModuleHero from '@/components/shared/ModuleHero';
 import { useMemo, useState } from 'react';
 
@@ -11,6 +12,7 @@ const methods = [
 ] as const;
 
 export default function KinhDichPage() {
+  const router = useRouter();
   const [active, setActive] = useState<(typeof methods)[number]['key']>('luchao');
   const [step, setStep] = useState(1);
   const [lines, setLines] = useState<string[]>([]);
@@ -18,6 +20,7 @@ export default function KinhDichPage() {
   const [question, setQuestion] = useState('');
   const [objectName, setObjectName] = useState('');
   const [maiHoaTime, setMaiHoaTime] = useState(() => new Date().toISOString().slice(0, 16));
+  const [loading, setLoading] = useState(false);
   const activeMethod = methods.find((method) => method.key === active) || methods[0];
   const derivedQuestion = useMemo(() => {
     if (active === 'thieny') return objectName.trim() ? `Thiên Ý: ${objectName.trim()}` : 'Thiên Ý: Xin quẻ theo tâm niệm hiện tại';
@@ -56,6 +59,20 @@ export default function KinhDichPage() {
     }, 450);
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.set('method', active);
+    params.set('question', derivedQuestion);
+    params.set('objectName', objectName);
+    params.set('datetime', maiHoaTime);
+    if (hexagramSeed !== undefined) {
+      params.set('hexagramSeed', String(hexagramSeed));
+    }
+    router.push(`/ket-qua/kinh-dich?${params.toString()}`);
+  }
+
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon="☰" title="Kinh Dịch" subtitle="64 quẻ · Lục Hào · Thiên Ý · Mai Hoa" accent="var(--color-kinh)" />
@@ -68,12 +85,7 @@ export default function KinhDichPage() {
           </button>
         ))}
       </section>
-      <form action="/ket-qua/kinh-dich" className="mx-5 mt-5 rounded-[20px] border border-border bg-surface p-5 md:mx-auto md:max-w-[1100px]">
-        <input type="hidden" name="method" value={active} />
-        <input type="hidden" name="question" value={active === 'thieny' ? question : derivedQuestion} />
-        <input type="hidden" name="objectName" value={objectName} />
-        <input type="hidden" name="datetime" value={maiHoaTime} />
-        {hexagramSeed !== undefined && <input type="hidden" name="hexagramSeed" value={hexagramSeed} />}
+      <form onSubmit={handleSubmit} className="mx-5 mt-5 rounded-[20px] border border-border bg-surface p-5 md:mx-auto md:max-w-[1100px]">
         <div className="rounded-[18px] border border-kinh/20 bg-kinh-bg p-4 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-kinh">Flow đang dùng</div>
           <div className="mt-2 font-semibold text-text">{activeMethod.title}</div>
@@ -131,7 +143,9 @@ export default function KinhDichPage() {
           {active === 'maihoa' ? <div className="mt-2 text-[13px] text-text-3">Mốc thời gian Mai Hoa: {maiHoaTime}</div> : null}
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <button className="rounded-[14px] bg-gradient-to-br from-kinh to-[#7AC89B] px-4 py-4 text-[15px] font-bold text-bg">Xem kết quả quẻ →</button>
+          <button type="submit" disabled={loading} className="rounded-[14px] bg-gradient-to-br from-kinh to-[#7AC89B] px-4 py-4 text-[15px] font-bold text-bg disabled:opacity-50">
+            {loading ? 'Đang lấy quẻ...' : 'Xem kết quả quẻ →'}
+          </button>
           <Link href="/goi-dich-vu" className="rounded-[14px] border border-[rgba(44,195,184,0.3)] bg-ai-bg px-4 py-4 text-center text-[15px] font-semibold text-ai">Mở AI giải quẻ chuyên sâu</Link>
         </div>
       </form>

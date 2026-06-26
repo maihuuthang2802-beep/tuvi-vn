@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import BottomSheet from '@/components/layout/BottomSheet';
 import ModuleHero from '@/components/shared/ModuleHero';
 import { PROVINCES } from '@/lib/ziwei/cities';
@@ -67,12 +68,12 @@ function PersonForm({
       <div className="mt-4 space-y-4">
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">HỌ TÊN</label>
-          <input name={`${prefix}Name`} className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none" placeholder="Nhập họ tên" />
+          <input id={`${prefix}Name`} className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none" placeholder="Nhập họ tên" />
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">NGÀY SINH</label>
           <input
-            name={`${prefix}BirthDate`}
+            id={`${prefix}BirthDate`}
             type="date"
             value={birthDate}
             onChange={(e) => {
@@ -113,8 +114,6 @@ function PersonForm({
               <p className="mt-2 text-[12px] text-text-3">Giờ mặt trời thật tại {city}: canh <span className="font-semibold text-gold">{HOURS[trueSolarHourPreview]}</span>.</p>
             </div>
           )}
-          <input type="hidden" name={`${prefix}BirthHour`} value={hour} />
-          <input type="hidden" name={`${prefix}BirthClockTime`} value={timeMode === 'exact' ? clockTime : ''} />
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỚI TÍNH</label>
@@ -123,7 +122,6 @@ function PersonForm({
               <button key={`${prefix}-${item}`} type="button" onClick={() => setGender(item)} className={`flex-1 rounded-[12px] border px-4 py-3 text-[15px] font-semibold ${gender === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
             ))}
           </div>
-          <input type="hidden" name={`${prefix}Gender`} value={gender} />
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">TỈNH/THÀNH</label>
@@ -134,9 +132,6 @@ function PersonForm({
             </span>
             <span className="text-text-2">⌄</span>
           </button>
-          <input type="hidden" name={`${prefix}Province`} value={province} />
-          <input type="hidden" name={`${prefix}City`} value={city} />
-          <input type="hidden" name={`${prefix}Longitude`} value={longitude} />
         </div>
       </div>
     </div>
@@ -144,6 +139,7 @@ function PersonForm({
 }
 
 export default function HopMenhPage() {
+  const router = useRouter();
   const [genderA, setGenderA] = useState<'Nam' | 'Nữ'>('Nam');
   const [genderB, setGenderB] = useState<'Nam' | 'Nữ'>('Nữ');
   const [hourA, setHourA] = useState('Tý');
@@ -165,6 +161,7 @@ export default function HopMenhPage() {
   const [birthDateB, setBirthDateB] = useState('');
   const [birthDateErrorA, setBirthDateErrorA] = useState('');
   const [birthDateErrorB, setBirthDateErrorB] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   const minDate = '1900-01-01';
@@ -186,10 +183,36 @@ export default function HopMenhPage() {
     setLongitudeB(longitude);
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!birthDateA || !birthDateB || birthDateErrorA || birthDateErrorB) return;
+    setLoading(true);
+    const aName = (document.getElementById('aName') as HTMLInputElement)?.value || '';
+    const bName = (document.getElementById('bName') as HTMLInputElement)?.value || '';
+    const params = new URLSearchParams();
+    params.set('aName', aName);
+    params.set('bName', bName);
+    params.set('aBirthDate', birthDateA);
+    params.set('bBirthDate', birthDateB);
+    params.set('aBirthHour', hourA);
+    params.set('bBirthHour', hourB);
+    params.set('aBirthClockTime', timeModeA === 'exact' ? clockTimeA : '');
+    params.set('bBirthClockTime', timeModeB === 'exact' ? clockTimeB : '');
+    params.set('aGender', genderA);
+    params.set('bGender', genderB);
+    params.set('aProvince', provinceA);
+    params.set('bProvince', provinceB);
+    params.set('aCity', cityA);
+    params.set('bCity', cityB);
+    params.set('aLongitude', String(longitudeA));
+    params.set('bLongitude', String(longitudeB));
+    router.push(`/ket-qua/hop-menh?${params.toString()}`);
+  }
+
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon="◎" title="Hợp Mệnh Tử Vi" subtitle="Đối chiếu hai lá số · Mệnh, Phu thê, Phúc đức, Đại hạn" accent="var(--color-tuvi)" />
-      <form action="/ket-qua/hop-menh" className="mx-5 mt-5 space-y-5 md:mx-auto md:max-w-[1100px]">
+      <form onSubmit={handleSubmit} className="mx-5 mt-5 space-y-5 md:mx-auto md:max-w-[1100px]">
         <div className="grid gap-5 md:grid-cols-2">
           <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} birthDate={birthDateA} setBirthDate={setBirthDateA} birthDateError={birthDateErrorA} setBirthDateError={setBirthDateErrorA} maxDate={today} minDate={minDate} />
           <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} birthDate={birthDateB} setBirthDate={setBirthDateB} birthDateError={birthDateErrorB} setBirthDateError={setBirthDateErrorB} maxDate={today} minDate={minDate} />
@@ -199,7 +222,9 @@ export default function HopMenhPage() {
           <div className="mt-3">MVP hiện đối chiếu Mệnh, Phu thê, Phúc đức, tứ hóa nổi bật và đại hạn hiện tại. Kết quả miễn phí cho điểm hợp và 4 trục chính. Gói mở rộng mở thêm breakdown sâu.</div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <button disabled={!birthDateA || !birthDateB || !!birthDateErrorA || !!birthDateErrorB} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-4 text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">Xem hợp mệnh →</button>
+          <button type="submit" disabled={!birthDateA || !birthDateB || !!birthDateErrorA || !!birthDateErrorB || loading} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-4 text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? 'Đang đối chiếu...' : 'Xem hợp mệnh →'}
+          </button>
           <Link href="/tu-vi/kien-thuc" className="rounded-[14px] border border-gold/20 bg-surface px-4 py-4 text-center text-[15px] font-semibold text-gold">Xem kho kiến thức Tử Vi</Link>
         </div>
       </form>

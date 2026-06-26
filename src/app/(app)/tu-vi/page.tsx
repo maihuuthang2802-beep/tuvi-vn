@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import BottomSheet from '@/components/layout/BottomSheet';
 import ModuleHero from '@/components/shared/ModuleHero';
 import ChartBoard from '@/components/ziwei/ChartBoard';
@@ -17,11 +18,13 @@ const DEFAULT_CITY = DEFAULT_PROVINCE.cities[0];
 const HOURS = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
 export default function TuViPage() {
+  const router = useRouter();
   const [gender, setGender] = useState<'Nam' | 'Nữ'>('Nam');
   const [calendar, setCalendar] = useState<'Dương lịch' | 'Âm lịch'>('Dương lịch');
   const [hour, setHour] = useState('Tý');
   const [timeMode, setTimeMode] = useState<'branch' | 'exact'>('branch');
   const [clockTime, setClockTime] = useState('12:00');
+  const [name, setName] = useState('');
   const [province, setProvince] = useState(DEFAULT_PROVINCE.name);
   const [city, setCity] = useState(DEFAULT_CITY.name);
   const [longitude, setLongitude] = useState(DEFAULT_CITY.longitude);
@@ -35,6 +38,7 @@ export default function TuViPage() {
   const [liunianYear, setLiunianYear] = useState<number | null>(null);
   const [birthDate, setBirthDate] = useState('');
   const [birthDateError, setBirthDateError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   const minDate = '1900-01-01';
@@ -53,7 +57,7 @@ export default function TuViPage() {
       day: 1,
       hour: timeMode === 'exact' ? trueSolarHourPreview : HOURS.indexOf(hour),
       gender: gender === 'Nữ' ? 'female' : 'male',
-      name: 'Đương số',
+      name: name || 'Đương số',
       province,
       city,
       longitude,
@@ -62,19 +66,35 @@ export default function TuViPage() {
     setSelectedPalace(sample.palaces.find((item) => item.isMingGong) || sample.palaces[0]);
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!birthDate || birthDateError) return;
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.set('name', name);
+    params.set('birthDate', birthDate);
+    params.set('calendar', calendar);
+    params.set('birthHour', hour);
+    params.set('birthClockTime', timeMode === 'exact' ? clockTime : '');
+    params.set('gender', gender);
+    params.set('province', province);
+    params.set('city', city);
+    params.set('longitude', String(longitude));
+    router.push(`/ket-qua/tu-vi?${params.toString()}`);
+  }
+
   return (
     <main className="page-enter pb-10">
       <ModuleHero icon="☯" title="Lập Lá Số Tử Vi" subtitle="Workbench lá số · chọn cung · xem đại hạn hiện tại" accent="var(--color-tuvi)" />
       <section className="mx-5 mt-5 grid gap-5 md:mx-auto md:max-w-[1280px] md:grid-cols-[360px_1fr_340px]">
-        <form action="/ket-qua/tu-vi" className="space-y-4 rounded-[20px] border border-border bg-surface p-5">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] border border-border bg-surface p-5">
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">HỌ TÊN</label>
-            <input name="name" className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" placeholder="Nhập họ tên" />
+            <input name="name" value={name} onChange={(e) => setName(e.target.value)} className="mt-2 w-full rounded-[12px] border border-border-2 bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none focus:border-tuvi focus:ring-3 focus:ring-tuvi-bg" placeholder="Nhập họ tên" />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">NGÀY SINH</label>
             <input
-              name="birthDate"
               type="date"
               value={birthDate}
               onChange={(e) => {
@@ -102,8 +122,6 @@ export default function TuViPage() {
                 <button key={item} type="button" onClick={() => setCalendar(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${calendar === item ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{item}</button>
               ))}
             </div>
-            <input type="hidden" name="calendar" value={calendar} />
-            <input type="hidden" name="birthDate" value={birthDate} />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
@@ -126,8 +144,6 @@ export default function TuViPage() {
                 </p>
               </div>
             )}
-            <input type="hidden" name="birthHour" value={hour} />
-            <input type="hidden" name="birthClockTime" value={timeMode === 'exact' ? clockTime : ''} />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỚI TÍNH</label>
@@ -136,7 +152,6 @@ export default function TuViPage() {
                 <button key={item} type="button" onClick={() => setGender(item)} className={`flex-1 rounded-[12px] border px-4 py-3 text-[15px] font-semibold ${gender === item ? 'border-tuvi bg-tuvi-bg text-gold' : 'border-border-2 bg-surface-2 text-text-2'}`}>{item}</button>
               ))}
             </div>
-            <input type="hidden" name="gender" value={gender} />
           </div>
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">TỈNH/THÀNH</label>
@@ -147,13 +162,12 @@ export default function TuViPage() {
               </span>
               <span className="text-text-2">⌄</span>
             </button>
-            <input type="hidden" name="province" value={province} />
-            <input type="hidden" name="city" value={city} />
-            <input type="hidden" name="longitude" value={longitude} />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <button type="button" onClick={previewChart} className="rounded-[14px] border border-gold/20 bg-tuvi-bg px-4 py-[14px] text-[15px] font-bold text-gold">Xem workbench</button>
-            <button disabled={!birthDate || !!birthDateError} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-[14px] text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">Lập Lá Số →</button>
+            <button type="submit" disabled={!birthDate || !!birthDateError || loading} className="rounded-[14px] bg-gradient-to-br from-tuvi to-[#E8C87A] px-4 py-[14px] text-[15px] font-bold text-bg disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? 'Đang lập lá số...' : 'Lập Lá Số →'}
+            </button>
           </div>
           <Link href="/co-thu" className="block rounded-[14px] border border-border bg-surface-2 px-4 py-3 text-center text-[14px] font-semibold text-text">Mở thư viện cổ thư</Link>
         </form>
