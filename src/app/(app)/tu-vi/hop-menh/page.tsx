@@ -35,6 +35,8 @@ function PersonForm({
   setBirthDate,
   birthDateError,
   setBirthDateError,
+  calendar,
+  setCalendar,
   maxDate,
   minDate,
 }: {
@@ -57,6 +59,8 @@ function PersonForm({
   setBirthDate: (value: string) => void;
   birthDateError: string;
   setBirthDateError: (value: string) => void;
+  calendar: 'Dương lịch' | 'Âm lịch';
+  setCalendar: (value: 'Dương lịch' | 'Âm lịch') => void;
   maxDate: string;
   minDate: string;
 }) {
@@ -94,6 +98,12 @@ function PersonForm({
             className={`mt-2 w-full rounded-[12px] border bg-surface-2 px-[14px] py-3 text-[15px] text-text outline-none ${birthDateError ? 'border-red-400' : 'border-border-2'}`}
           />
           {birthDateError && <p className="mt-1 text-[12px] text-red-400">{birthDateError}</p>}
+          <div className="mt-3 flex gap-2">
+            {(['Dương lịch', 'Âm lịch'] as const).map((item) => (
+              <button key={item} type="button" onClick={() => setCalendar(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${calendar === item ? 'bg-tuvi-bg text-gold border border-gold/40' : 'border border-border text-text-2'}`}>{item}</button>
+            ))}
+          </div>
+          <input type="hidden" name={`${prefix}Calendar`} value={calendar} />
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[1px] text-gold">GIỜ SINH</label>
@@ -161,6 +171,8 @@ export default function HopMenhPage() {
   const [birthDateB, setBirthDateB] = useState('');
   const [birthDateErrorA, setBirthDateErrorA] = useState('');
   const [birthDateErrorB, setBirthDateErrorB] = useState('');
+  const [calendarA, setCalendarA] = useState<'Dương lịch' | 'Âm lịch'>('Dương lịch');
+  const [calendarB, setCalendarB] = useState<'Dương lịch' | 'Âm lịch'>('Dương lịch');
   const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
@@ -214,8 +226,8 @@ export default function HopMenhPage() {
       <ModuleHero icon="◎" title="Hợp Mệnh Tử Vi" subtitle="Đối chiếu hai lá số · Mệnh, Phu thê, Phúc đức, Đại hạn" accent="var(--color-tuvi)" />
       <form onSubmit={handleSubmit} className="mx-5 mt-5 space-y-5 md:mx-auto md:max-w-[1100px]">
         <div className="grid gap-5 md:grid-cols-2">
-          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} birthDate={birthDateA} setBirthDate={setBirthDateA} birthDateError={birthDateErrorA} setBirthDateError={setBirthDateErrorA} maxDate={today} minDate={minDate} />
-          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} birthDate={birthDateB} setBirthDate={setBirthDateB} birthDateError={birthDateErrorB} setBirthDateError={setBirthDateErrorB} maxDate={today} minDate={minDate} />
+          <PersonForm prefix="a" title="Người A" accent="var(--color-tuvi)" gender={genderA} setGender={setGenderA} hour={hourA} setHour={setHourA} timeMode={timeModeA} setTimeMode={setTimeModeA} clockTime={clockTimeA} setClockTime={setClockTimeA} province={provinceA} city={cityA} longitude={longitudeA} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'a', step: 'province' }); }} birthDate={birthDateA} setBirthDate={setBirthDateA} birthDateError={birthDateErrorA} setBirthDateError={setBirthDateErrorA} calendar={calendarA} setCalendar={setCalendarA} maxDate={today} minDate={minDate} />
+          <PersonForm prefix="b" title="Người B" accent="var(--color-ai)" gender={genderB} setGender={setGenderB} hour={hourB} setHour={setHourB} timeMode={timeModeB} setTimeMode={setTimeModeB} clockTime={clockTimeB} setClockTime={setClockTimeB} province={provinceB} city={cityB} longitude={longitudeB} openPicker={() => { setProvinceQuery(''); setPicker({ person: 'b', step: 'province' }); }} birthDate={birthDateB} setBirthDate={setBirthDateB} birthDateError={birthDateErrorB} setBirthDateError={setBirthDateErrorB} calendar={calendarB} setCalendar={setCalendarB} maxDate={today} minDate={minDate} />
         </div>
         <div className="rounded-[20px] border border-gold/15 bg-tuvi-bg p-5 text-[14px] text-text-2">
           <div className="text-[11px] uppercase tracking-[2px] text-gold">Phạm vi đối chiếu</div>

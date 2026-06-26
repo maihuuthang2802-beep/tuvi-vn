@@ -9,8 +9,17 @@ import { PROVINCES } from '@/lib/ziwei/cities';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import { resolveBirthHour } from '@/lib/ziwei/true-solar';
 import { saveHistoryEntry } from '@/lib/history';
+import { Lunar } from 'lunar-javascript';
 
 const HOURS = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+
+function toSolarDate(dateStr: string, calendar: string | undefined): string {
+  if (calendar !== 'Âm lịch' || !dateStr) return dateStr;
+  const d = new Date(dateStr + 'T00:00:00');
+  const lunar = Lunar.fromYmd(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  const solar = lunar.getSolar();
+  return `${solar.getYear()}-${String(solar.getMonth()).padStart(2, '0')}-${String(solar.getDay()).padStart(2, '0')}`;
+}
 
 function buildPlanHref(service: string, params: Record<string, string | undefined>, plan: 'starter' | 'pro' = 'starter') {
   const query = new URLSearchParams({ service, plan, returnTo: `/ket-qua/${service}` });
@@ -44,7 +53,7 @@ async function renderTuVi(params: Record<string, string | undefined>) {
     branchList: HOURS,
     clockTime: params.birthClockTime,
     longitude: location.longitude,
-    dateStr: params.birthDate || '1995-01-01',
+    dateStr: toSolarDate(params.birthDate || '1995-01-01', params.calendar),
   });
   const result = createReading({
     service: 'tu-vi',
@@ -84,14 +93,14 @@ async function renderHopMenh(params: Record<string, string | undefined>) {
     branchList: HOURS,
     clockTime: params.aBirthClockTime,
     longitude: locationA.longitude,
-    dateStr: params.aBirthDate || '1995-01-01',
+    dateStr: toSolarDate(params.aBirthDate || '1995-01-01', params.aCalendar),
   });
   const resolvedB = resolveBirthHour({
     branch: params.bBirthHour,
     branchList: HOURS,
     clockTime: params.bBirthClockTime,
     longitude: locationB.longitude,
-    dateStr: params.bBirthDate || '1996-01-01',
+    dateStr: toSolarDate(params.bBirthDate || '1996-01-01', params.bCalendar),
   });
   const dateA = new Date(resolvedA.dateStr);
   const dateB = new Date(resolvedB.dateStr);
