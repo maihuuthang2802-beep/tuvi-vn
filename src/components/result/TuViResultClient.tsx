@@ -7,6 +7,7 @@ import type { ReadingResult } from '@/lib/readings';
 import { BRANCH_VI, PALACE_VI, SIHUA_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
 import { getStarSlugByName } from '@/lib/ziwei/knowledge';
 import { detectCachCuc, getStarDeepMeaning, analyzeCurrentDaXian } from '@/lib/ziwei/patterns';
+import { useAIInterpretation } from '@/hooks/useAIInterpretation';
 import { downloadPDF } from '@/lib/pdf';
 import ShareCardButton from '@/components/share/ShareCardButton';
 
@@ -18,7 +19,7 @@ interface TuViResultClientProps {
   paywallHref: string;
 }
 
-type TabType = 'overview' | 'ming' | 'daxian' | 'sihua' | 'palaces';
+type TabType = 'overview' | 'ming' | 'daxian' | 'sihua' | 'palaces' | 'ai';
 
 const TABS: { id: TabType; label: string; icon: string }[] = [
   { id: 'overview', label: 'Tổng quan', icon: '◎' },
@@ -26,6 +27,7 @@ const TABS: { id: TabType; label: string; icon: string }[] = [
   { id: 'daxian', label: 'Đại Hạn', icon: '◇' },
   { id: 'sihua', label: 'Tứ Hóa', icon: '◈' },
   { id: 'palaces', label: 'Các Cung', icon: '◉' },
+  { id: 'ai', label: 'AI Luận Giải', icon: '✦' },
 ];
 
 export default function TuViResultClient({
@@ -37,6 +39,7 @@ export default function TuViResultClient({
 }: TuViResultClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [downloading, setDownloading] = useState(false);
+  const { text: aiText, loading: aiLoading, error: aiError } = useAIInterpretation('tu-vi', result, params.question || '');
 
   const ming = chart.palaces.find(p => p.isMingGong);
   const currentDaXian = chart.daXians[chart.currentDaXianIndex];
@@ -232,48 +235,59 @@ export default function TuViResultClient({
               </div>
             )}
 
-             {activeTab === 'palaces' && (
-               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                 {chart.palaces.map(palace => {
-                   const mainStars = palace.stars.filter(s => s.type === 'major');
-                   const palaceKnowledgeLinks = mainStars.map((star) => ({ name: star.name, slug: getStarSlugByName(viStars([star.name])) })).filter((item): item is { name: string; slug: string } => Boolean(item.slug));
-                   return (
-                     <div
+            {activeTab === 'palaces' && (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                {chart.palaces.map(palace => {
+                  const mainStars = palace.stars.filter(s => s.type === 'major');
+                  const palaceKnowledgeLinks = mainStars.map((star) => ({ name: star.name, slug: getStarSlugByName(viStars([star.name])) })).filter((item): item is { name: string; slug: string } => Boolean(item.slug));
+                  return (
+                    <div
+                     key={`${palace.branch}-${palace.name}`}
+                     className={`rounded-[18px] border p-3 transition ${
+                       palace.isMingGong
+                         ? 'border-gold/40 bg-tuvi-bg'
+                         : palace.isCurrentDaXian
+                           ? 'border-ai/40 bg-ai-bg'
+                           : 'border-border bg-surface-2'
+                     }`}
+                   >
+                     <div className="flex items-start justify-between gap-2">
+                       <div>
+                         <p className="font-semibold text-text">{viPalace(palace.name)}</p>
+                         <p className="text-[11px] text-text-3">{BRANCH_VI[palace.branch]}</p>
+                       </div>
+                       {palace.isMingGong && <span className="text-[11px] text-gold">★ Mệnh</span>}
+                     </div>
+                     <p className="mt-2 text-[12px] text-text-2">
+                       {mainStars.length ? viStars(mainStars.map(s => s.name)) : 'Vô chính diệu'}
+                     </p>
+                     {palace.borrowedStars?.length ? (
+                       <p className="mt-1 text-[11px] text-gold">Mượn: {viStars(palace.borrowedStars)}</p>
+                     ) : null}
+                     {palaceKnowledgeLinks.length ? (
+                       <div className="mt-2 flex flex-wrap gap-1">
+                         {palaceKnowledgeLinks.map((item) => (
+                           <Link key={`${palace.name}-${item.name}`} href={`/tu-vi/kien-thuc/${item.slug}/overview`} className="rounded-full border border-gold/20 bg-surface px-2 py-1 text-[10px] text-gold hover:opacity-90">
+                             Đọc {viStars([item.name])}
+                           </Link>
+                         ))}
+                       </div>
+                     ) : null}
+                   </div>
+                 );
+               })}
+             </div>
+            )}
 
-                      key={`${palace.branch}-${palace.name}`}
-                      className={`rounded-[18px] border p-3 transition ${
-                        palace.isMingGong
-                          ? 'border-gold/40 bg-tuvi-bg'
-                          : palace.isCurrentDaXian
-                            ? 'border-ai/40 bg-ai-bg'
-                            : 'border-border bg-surface-2'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-text">{viPalace(palace.name)}</p>
-                          <p className="text-[11px] text-text-3">{BRANCH_VI[palace.branch]}</p>
-                        </div>
-                        {palace.isMingGong && <span className="text-[11px] text-gold">★ Mệnh</span>}
-                      </div>
-                      <p className="mt-2 text-[12px] text-text-2">
-                        {mainStars.length ? viStars(mainStars.map(s => s.name)) : 'Vô chính diệu'}
-                      </p>
-                      {palace.borrowedStars?.length ? (
-                        <p className="mt-1 text-[11px] text-gold">Mượn: {viStars(palace.borrowedStars)}</p>
-                      ) : null}
-                      {palaceKnowledgeLinks.length ? (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {palaceKnowledgeLinks.map((item) => (
-                            <Link key={`${palace.name}-${item.name}`} href={`/tu-vi/kien-thuc/${item.slug}/overview`} className="rounded-full border border-gold/20 bg-surface px-2 py-1 text-[10px] text-gold hover:opacity-90">
-                              Đọc {viStars([item.name])}
-                            </Link>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
+            {activeTab === 'ai' && (
+              <div className="rounded-[18px] border border-[rgba(44,195,184,0.3)] bg-ai-bg p-5">
+                {aiLoading ? (
+                  <p className="text-[14px] text-text-3">Đang tạo luận giải lá số...</p>
+                ) : aiError ? (
+                  <p className="text-[14px] text-text-3">{aiError}</p>
+                ) : (
+                  <p className="text-[14px] whitespace-pre-wrap text-text-2">{aiText}</p>
+                )}
               </div>
             )}
           </div>
