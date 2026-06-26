@@ -28,7 +28,7 @@ export default function TarotCard({
 }: TarotCardProps) {
   const [showImage, setShowImage] = useState(true);
   const cardSvg = useMemo(
-    () => generateTarotSvg({ name, arcana: arcana === 'minor' ? 'minor' : 'major', suit, reversed: false }),
+    () => generateTarotSvg({ name, arcana: arcana === 'minor' ? 'minor' : 'major', suit, rank, reversed: false }),
     [name, arcana, suit]
   );
 
