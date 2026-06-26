@@ -17,7 +17,8 @@ Always respond in Vietnamese. Be poetic yet grounded. Avoid generic advice. Refe
   if (service === 'kinh-dich') {
     return `You are an expert Vietnamese I Ching (Kinh Dịch) interpreter using King Wen ordering and 64 hexagrams.
 You provide deep spiritual insights grounded in Confucian and Daoist philosophy.
-Focus on: the primary and changing hexagrams, moving lines, the interplay between yin/yang, and actionable wisdom.
+CRITICAL: First read the user's question in "Câu hỏi", then interpret the hexagram SPECIFICALLY in relation to that question. Never give a generic hexagram description — always connect every insight back to what the user asked.
+Focus on: the primary and changing hexagrams, moving lines, the interplay between yin/yang, and actionable wisdom directly relevant to the question.
 Always respond in Vietnamese. Use classical reference where appropriate but make it relevant to modern life.`;
   }
   if (service === 'xin-xam') {
@@ -70,9 +71,9 @@ Summary: ${reading.summary}
 Details:
 ${reading.details.map((d) => `- ${d}`).join('\n')}
 
-Question: ${question || context?.question || 'What does this hexagram teach me?'}
+Câu hỏi của người dùng: ${question || context?.question || 'Tổng quan hiện tại'}
 
-Provide a profound interpretation of this hexagram draw. Explain the wisdom, warn of pitfalls, and suggest right action. Connect to the seeker's current situation.`;
+Hãy luận giải quẻ Kinh Dịch này bằng tiếng Việt. QUAN TRỌNG: phải trả lời trực tiếp câu hỏi trên, liên hệ từng hào và quẻ với câu hỏi cụ thể. Không đưa ra luận giải chung chung. Đề cập quẻ chủ, quẻ biến (nếu có), hào động, và đưa ra lời khuyên thực tế cho tình huống của người hỏi.`;
   }
 
   if (service === 'xin-xam') {
@@ -82,9 +83,9 @@ Summary: ${reading.summary}
 Details:
 ${reading.details.map((d) => `- ${d}`).join('\n')}
 
-Question/Theme: ${question || context?.question || 'General guidance'}
+Câu hỏi / Lĩnh vực: ${question || context?.question || 'Tổng quan'}
 
-Provide a compassionate, insightful interpretation of this lot. Explore its deeper meanings beyond the surface category. What is this spirit message guiding them toward? Suggest practical steps.`;
+Hãy luận giải xăm này bằng tiếng Việt. Trả lời trực tiếp vào lĩnh vực người dùng đã chọn. Đào sâu ý nghĩa tâm linh, đưa ra lời khuyên thực tế và động viên tinh thần.`;
   }
 
   return `Tarot Spread:
@@ -93,7 +94,7 @@ Summary: ${reading.summary}
 Details:
 ${reading.details.map((d) => `- ${d}`).join('\n')}
 
-Question: ${question || context?.question || 'What do these cards reveal?'}
+Câu hỏi: ${question || context?.question || 'Tổng quan'}
 
-Provide a nuanced interpretation of this tarot spread. Weave the cards into a coherent narrative. Address the seeker's underlying question with compassion and clarity.`;
+Luận giải trải bài Tarot này bằng tiếng Việt. Liên hệ từng lá bài với câu hỏi của người dùng. Kể thành một câu chuyện mạch lạc, đưa ra góc nhìn tâm lý và lời khuyên thực tế.`;
 }

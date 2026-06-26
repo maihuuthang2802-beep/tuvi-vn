@@ -197,6 +197,7 @@ export function createReading(input: ReadingInput): ReadingResult {
       title: `Quẻ Kinh Dịch: ${reading.hexagram.name}`,
       summary: reading.summary,
       details: [
+        `Câu hỏi: ${question}`,
         `Phương pháp: ${reading.method === 'maihoa' ? 'Mai Hoa' : reading.method === 'thieny' ? 'Thiên Ý' : 'Lục Hào'}. ${reading.methodDetail}`,
         `Quẻ chủ: ${reading.hexagram.name} (${reading.hexagram.han}) — ${reading.hexagram.judgment}`,
         `Hình ảnh: ${reading.hexagram.image}`,
