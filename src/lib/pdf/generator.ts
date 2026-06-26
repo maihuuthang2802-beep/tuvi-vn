@@ -10,7 +10,7 @@ export interface PDFOptions {
   metadata?: Record<string, string>;
 }
 
-const FONT_DIR = path.join(process.cwd(), 'src', 'fonts');
+const FONT_DIR = path.join(process.cwd(), 'node_modules', 'dejavu-fonts-ttf');
 const FONT_REGULAR = path.join(FONT_DIR, 'DejaVuSans.ttf');
 const FONT_BOLD = path.join(FONT_DIR, 'DejaVuSans-Bold.ttf');
 const FONT_ITALIC = path.join(FONT_DIR, 'DejaVuSans-Oblique.ttf');
