@@ -12,7 +12,7 @@ export async function interpretReading(req: InterpretRequest): Promise<string> {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
     const response = await fetch(`${baseURL}/chat/completions`, {
@@ -28,7 +28,7 @@ export async function interpretReading(req: InterpretRequest): Promise<string> {
           { role: 'user', content: getUserPrompt(req) },
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 4096,
         stream: false,
       }),
       signal: controller.signal,
@@ -50,7 +50,11 @@ export async function interpretReading(req: InterpretRequest): Promise<string> {
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content?.trim();
-    return text || '[AI] Không thể tạo phản hồi. Thử lại.';
+    if (!text) return '[AI] Không thể tạo phản hồi. Thử lại.';
+    if (data.choices?.[0]?.finish_reason === 'length') {
+      console.warn('[AI] Response truncated by token limit');
+    }
+    return text;
   } catch (error) {
     clearTimeout(timeoutId);
     const msg = error instanceof Error ? error.message : String(error);
