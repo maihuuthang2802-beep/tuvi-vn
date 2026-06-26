@@ -2,7 +2,7 @@ import { castIChing } from '@/lib/iching/engine';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import { analyzeCompatibility } from '@/lib/ziwei/compatibility';
 import { BRANCH_VI, PALACE_VI, STEM_VI, viPalace, viStars, viWuxingJu } from '@/lib/ziwei/vietnamese';
-import { getXiXamLot, CATEGORY_VI, CATEGORY_MEANINGS } from '@/lib/xixam/lots';
+import { getXiXamLot, XI_XAM_LOTS, CATEGORY_VI, CATEGORY_MEANINGS } from '@/lib/xixam/lots';
 
 export type ServiceKey = 'tu-vi' | 'hop-menh' | 'kinh-dich' | 'xin-xam' | 'tarot';
 
@@ -208,7 +208,7 @@ export function createReading(input: ReadingInput): ReadingResult {
   }
 
   if (input.service === 'xin-xam') {
-    const lot = getXiXamLot(seed);
+    const lot = getXiXamLot(Math.floor(Math.random() * XI_XAM_LOTS.length));
     return {
       title: `Xin xăm: ${lot.name}`,
       summary: `${lot.han} — ${lot.meaning}`,
