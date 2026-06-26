@@ -83,7 +83,7 @@ export function drawTarotCards(question: string, spread: '1' | '3' = '3'): Tarot
     })),
   ];
 
-  let state = hash(`${question}|${spread}|tarot-78`);
+  let state = hash(`${question}|${spread}|tarot-78|${Date.now()}`);
   const total = spread === '1' ? 1 : 3;
   const picks: TarotCardDraw[] = [];
 

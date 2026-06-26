@@ -241,7 +241,7 @@ export function castIChing(input: string | IChingInput, now = new Date()): IChin
 
   if (method === 'thieny') {
     const objectName = payload.objectName?.trim() || cleanQuestion;
-    const seed = hashText(objectName.normalize('NFKD'));
+    const seed = hashText(`${objectName.normalize('NFKD')}|${now.toISOString()}`);
     const upper = trigramByNumber((seed % 8) + 1);
     const lower = trigramByNumber((Math.floor(seed / 8) % 8) + 1);
     const movingLine = normalizeMod(Math.floor(seed / 64) + objectName.length, 6);
